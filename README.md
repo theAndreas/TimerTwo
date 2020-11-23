@@ -1,5 +1,7 @@
 # TimerTwo
-Arduino Timer2 library
+Arduino Timer2 library. This is a simple adaption of the Arduino Timer1 library. For more information see https://playground.arduino.cc/Code/Timer1/.
+
+## Small API description
 
 ### init(Microseconds, sTimerOverflowCallback)
 You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds). Note that this breaks analogWrite() for digital pins 9 and 10 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
