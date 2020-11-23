@@ -212,6 +212,7 @@ stdReturnType TimerTwo::disablePwm(TimerTwoPwmPinType PwmPin)
     }
     if(TIMERTWO_PWM_PIN_11 == PwmPin) {
         ReturnValue = E_OK;
+	    /* deactivate compare output mode in timer control register */
         writeBit(TCCR2A, COM2A1, 0);
 
     }
