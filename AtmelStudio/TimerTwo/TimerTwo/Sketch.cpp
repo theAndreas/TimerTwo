@@ -14,8 +14,12 @@ void timerCallback() {
 
 void setup() {
   pinMode(PIN_TOGGLE, OUTPUT);
-  Timer2.init(1000u, timerCallback);
-  Timer2.start();
+  if(Timer2.init(1000u, timerCallback) == E_NOT_OK) {
+	  // something went wrong, check your parameters
+  }
+  if(Timer2.start() == E_NOT_OK) {
+	  // something went wrong, has init function already been called?
+  }
   Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
   Timer2.enablePwm(TimerTwo::PWM_PIN_11, 10);
 }

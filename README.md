@@ -3,6 +3,9 @@ Arduino Timer2 library. This is a simple adaption of the Arduino Timer1 library.
 
 ## Small API description
 
+### General 
+The most functions have parameter checks and some other checks implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
+
 ### init(Microseconds, sTimerOverflowCallback)
 You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set at 1 millisecond. Note that this breaks analogWrite() for digital pins 9 and 10 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
 

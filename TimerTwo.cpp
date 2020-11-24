@@ -84,9 +84,9 @@ TimerTwo& TimerTwo::getInstance()
  *                  E_NOT_OK
  *  \pre			Timer has to be in NONE state
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::init(uint32_t Microseconds, TimerIsrCallbackF_void sTimerOverflowCallback)
+StdReturnType TimerTwo::init(uint32_t Microseconds, TimerIsrCallbackF_void sTimerOverflowCallback)
 {
-	stdReturnType ReturnValue = E_NOT_OK;
+	StdReturnType ReturnValue = E_NOT_OK;
 
 	if(STATE_INIT == State) {
         ReturnValue = E_OK;
@@ -118,9 +118,9 @@ stdReturnType TimerTwo::init(uint32_t Microseconds, TimerIsrCallbackF_void sTime
  *  \return         E_OK
  *                  E_NOT_OK
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::setPeriod(uint32_t Microseconds)
+StdReturnType TimerTwo::setPeriod(uint32_t Microseconds)
 {
-	stdReturnType ReturnValue = E_NOT_OK;
+	StdReturnType ReturnValue = E_NOT_OK;
 	uint32_t TimerCycles;
     const uint32_t MicrosecondsMax = ((TIMERTWO_RESOLUTION / (F_CPU / 1000000uL)) * TIMERTWO_MAX_PRESCALER * 2u);
 
@@ -167,9 +167,9 @@ stdReturnType TimerTwo::setPeriod(uint32_t Microseconds)
  *                  E_NOT_OK
  *  \pre			Timer has to be in READY, RUNNING or STOPPED state
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle) 
+StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle) 
 {
-	stdReturnType ReturnValue = E_NOT_OK;
+	StdReturnType ReturnValue = E_NOT_OK;
 
 	if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State))
 	{	
@@ -199,9 +199,9 @@ stdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
  *  \return         E_OK
  *                  E_NOT_OK
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
+StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
 {
-	stdReturnType ReturnValue = E_NOT_OK;
+	StdReturnType ReturnValue = E_NOT_OK;
 
 	if(PWM_PIN_3 == PwmPin) {
         ReturnValue = E_OK;
@@ -228,9 +228,9 @@ stdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
  *                  E_NOT_OK
  *  \pre			Timer has to be in READY, RUNNING or STOPPED STATE
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
+StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
 {
-	stdReturnType ReturnValue = E_NOT_OK;
+	StdReturnType ReturnValue = E_NOT_OK;
 	uint32_t DutyCycleTrans;
 
 	if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State)) {
@@ -260,7 +260,7 @@ stdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
  *                  E_NOT_OK
  *  \pre			Timer has to be in READY or STOPPED STATE
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::start()
+StdReturnType TimerTwo::start()
 {
 	byte TCNT2_tmp;
 
@@ -310,7 +310,7 @@ void TimerTwo::stop()
  *                  E_NOT_OK
  *  \pre			Timer has to be in STOPPED STATE
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::resume()
+StdReturnType TimerTwo::resume()
 {
 	if(STATE_STOPPED == State) {
 		/* resume counter by setting clock select register */
@@ -332,7 +332,7 @@ stdReturnType TimerTwo::resume()
  *  \return         E_OK
  *                  E_NOT_OK
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void sTimerOverflowCallback)
+StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void sTimerOverflowCallback)
 {
 	if(sTimerOverflowCallback != nullptr) {
 		TimerOverflowCallback = sTimerOverflowCallback;
@@ -371,9 +371,9 @@ void TimerTwo::detachInterrupt()
  *                  E_NOT_OK
  *  \pre			Timer has to be in RUNNING STATE
  *****************************************************************************************************************************************************/
-stdReturnType TimerTwo::read(uint32_t& Microseconds)
+StdReturnType TimerTwo::read(uint32_t& Microseconds)
 {
-	stdReturnType ReturnValue = E_NOT_OK;
+	StdReturnType ReturnValue = E_NOT_OK;
 	byte TCNT2_tmp;
 	int CounterValue;
 	byte PrescaleShiftScale = 0u;

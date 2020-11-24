@@ -123,17 +123,17 @@ class TimerTwo
 	// set methods
 
 	// methods
-    stdReturnType init(uint32_t = 1000uL, TimerIsrCallbackF_void = nullptr);
-    stdReturnType setPeriod(uint32_t);
-    stdReturnType enablePwm(PwmPinType, byte);
-    stdReturnType disablePwm(PwmPinType);
-    stdReturnType setPwmDuty(PwmPinType, byte);
-    stdReturnType start();
+    StdReturnType init(uint32_t = 1000uL, TimerIsrCallbackF_void = nullptr);
+    StdReturnType setPeriod(uint32_t);
+    StdReturnType enablePwm(PwmPinType, byte);
+    StdReturnType disablePwm(PwmPinType);
+    StdReturnType setPwmDuty(PwmPinType, byte);
+    StdReturnType start();
     void stop();
-    stdReturnType resume();
-    stdReturnType attachInterrupt(TimerIsrCallbackF_void);
+    StdReturnType resume();
+    StdReturnType attachInterrupt(TimerIsrCallbackF_void);
     void detachInterrupt();
-    stdReturnType read(uint32_t&);
+    StdReturnType read(uint32_t&);
     void callOverflowCallback() { TimerOverflowCallback(); }
 };
 

@@ -55,7 +55,7 @@
 typedef enum {
     E_OK = 0,
     E_NOT_OK = 1
-} stdReturnType;
+} StdReturnType;
 
 #endif
 
