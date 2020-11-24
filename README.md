@@ -9,11 +9,14 @@ You must call this method first to use any of the other methods. You can optiona
 ### start()
 Starts the timer. Note init() has to be called first.
 
+### stop()
+Stops the timer by removing the timer clock.
+
 ### setPeriod(Microseconds)
-Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 16320 microseconds or about 0.01632 seconds. Note that setting the period will change the attached interrupt and both pwm outputs' frequencies and duty cycles simultaneously.
+Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32768 microseconds or about 0.032768 seconds. Note that setting the period will change the attached interrupt and both pwm outputs' frequencies and duty cycles simultaneously.
 
 ### enablePwm(PwmPin, DutyCycle)
-Generates a PWM waveform on the specified pin. Output pins for Timer1 are PORTB pin 3 and PORTD pin 3, so you have to choose between these two, anything else is ignored. On Arduino, these are digital pins 11 and 3, so those aliases also work. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
+Generates a PWM waveform on the specified pin. Output pins for Timer1 are PORTB pin 3 and PORTD pin 3, so you have to choose between these two, anything else is ignored. On Arduino, these are digital pins 11 (PWM_PIN_11) and 3 (PWM_PIN_3). The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
 
 ### attachInterrupt(sTimerOverflowCallback)
 Calls a function at the specified interval in microseconds. Be careful about trying to execute too complicated of an interrupt at too high of a frequency, or the CPU may never enter the main loop and your program will 'lock up'.
@@ -29,3 +32,29 @@ Turns PWM off for the specified pin so you can use that pin for something else.
 
 ### read()
 Reads the time since last rollover in microseconds.
+
+## Usage
+```c++
+/*
+ This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3 and PIN11.
+ The frequency depends on the period of the timer
+*/
+
+#define PIN_TOGGLE          13u
+
+void timerCallback() {
+    digitalWrite(PIN_TOGGLE, !digitalRead(PIN_TOGGLE));
+};
+
+void setup() {
+  pinMode(PIN_TOGGLE, OUTPUT);
+  Timer2.init(1000u, timerCallback);
+  Timer2.start();
+  Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
+  Timer2.enablePwm(TimerTwo::PWM_PIN_11, 10);
+}
+
+void loop() {
+
+}
+```
