@@ -21,7 +21,6 @@ void setup() {
 	  // something went wrong, has init function already been called?
   }
   Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
-  Timer2.enablePwm(TimerTwo::PWM_PIN_11, 10);
 }
 
 void loop() {

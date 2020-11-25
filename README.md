@@ -19,7 +19,7 @@ Stops the timer by removing the timer clock.
 Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32768 microseconds or about 0.032768 seconds. Note that setting the period will change the attached interrupt and both pwm outputs' frequencies and duty cycles simultaneously.
 
 ### enablePwm(PwmPin, DutyCycle)
-Generates a PWM waveform on the specified pin. Output pins for Timer1 are PORTB pin 3 and PORTD pin 3, so you have to choose between these two, anything else is ignored. On Arduino, these are digital pins 11 (PWM_PIN_11) and 3 (PWM_PIN_3). The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
+Generates a PWM waveform on the specified pin. Output pins for Timer1 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3 (PWM_PIN_3). But the library supports Pwm only for Pin3. Because in the Timer Mode 5 PWM, Phase Correct the register (OCRA) is used to save the top value. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
 
 ### attachInterrupt(sTimerOverflowCallback)
 Calls a function at the specified interval in microseconds. Be careful about trying to execute too complicated of an interrupt at too high of a frequency, or the CPU may never enter the main loop and your program will 'lock up'.
@@ -54,7 +54,6 @@ void setup() {
   Timer2.init(1000u, timerCallback);
   Timer2.start();
   Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
-  Timer2.enablePwm(TimerTwo::PWM_PIN_11, 10);
 }
 
 void loop() {

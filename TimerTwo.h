@@ -91,10 +91,16 @@ class TimerTwo
         REG_CS_PRESCALE_256,
         REG_CS_PRESCALE_1024
     };
+    
+    /*
+        Info: PWM for Pin 11 can not be used because in Mode 5 (PWM, Phase Correct) 
+              OCRA is TOP value of the Timer/Counter. So Duty Cycle for OC2A Pin 11
+              can not be set, otherwise counter to value will be overwritten.
+    */
 
     /* Type which includes the Pwm Pins */
     enum PwmPinType {
-        PWM_PIN_11 = TIMERTWO_A_ARDUINO_PIN,
+        //PWM_PIN_11 = TIMERTWO_A_ARDUINO_PIN,
         PWM_PIN_3 = TIMERTWO_B_ARDUINO_PIN
     };
 

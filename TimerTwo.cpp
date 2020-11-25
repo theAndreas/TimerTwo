@@ -178,12 +178,14 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
 			pinMode(PWM_PIN_3, OUTPUT);
 			/* activate compare output mode in timer control register */
 			writeBit(TCCR2A, COM2B1, 1u);
-		} else if(PWM_PIN_11 == PwmPin) {
+		}
+        /* Pwm Pin 11 can not be used in Timer Mode 5
+        if(PWM_PIN_11 == PwmPin) {
 			ReturnValue = E_OK;
 			pinMode(PWM_PIN_11, OUTPUT);
-			/* activate compare output mode in timer control register */
 			writeBit(TCCR2A, COM2A1, 1u);
-		}
+		} 
+        */
 		if(setPwmDuty(PwmPin, DutyCycle) == E_NOT_OK) ReturnValue = E_NOT_OK;
 	}
 	return ReturnValue;
@@ -207,11 +209,13 @@ StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
         ReturnValue = E_OK;
 		/* deactivate compare output mode in timer control register */
 		writeBit(TCCR2A, COM2B1, 0u);
-	} else if(PWM_PIN_11 == PwmPin) {
+	} 
+    /* Pwm Pin 11 can not be used in Timer Mode 5
+    if(PWM_PIN_11 == PwmPin) {
         ReturnValue = E_OK;
-		/* deactivate compare output mode in timer control register */
         writeBit(TCCR2A, COM2A1, 0u);
     }
+    */
 	return ReturnValue;
 } /* disablePwm */
 
@@ -236,7 +240,8 @@ StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
 	if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State)) {
 		/* duty cycle out of bound? */
 		if(DutyCycle <= TIMERTWO_RESOLUTION) {
-			/* use rule of three to calculate duty cycle related to timer top value */
+			// use rule of three to calculate duty cycle related to timer top value 
+            // OCR2A is top value of timer
 			DutyCycleTrans = OCR2A * DutyCycle;
 			DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
 			/* set output compare register value for given pwm pin */
