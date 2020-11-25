@@ -99,11 +99,10 @@ class TimerTwo
     };
     
     /*
-        Info: PWM for Pin 11 can not be used because in Mode 5 (PWM, Phase Correct) 
-              OCRA is TOP value of the Timer/Counter. So Duty Cycle for OC2A Pin 11
-              can not be set, otherwise counter top value will be overwritten.
+		PWM for Pin 11 can not be used because in Mode 5 (PWM, Phase Correct) 
+		OCRA is TOP value of the Timer/Counter. So Duty Cycle for OC2A Pin 11
+		can not be set, otherwise counter top value will be overwritten.
     */
-
     /* Type which includes the Pwm Pins */
     enum PwmPinType {
         //PWM_PIN_11 = TIMERTWO_A_ARDUINO_PIN,
@@ -136,7 +135,7 @@ class TimerTwo
     // get methods
     StateType getState() const { return State; }
     TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
-    TimeType getPeriodMax() { return PeriodMax; }
+    TimeType getPeriodMax() const { return PeriodMax; }
     // set methods
 
     // methods

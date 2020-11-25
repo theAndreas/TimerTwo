@@ -119,8 +119,6 @@ StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void sTime
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::setPeriod(TimeType Microseconds)
 {
-    StdReturnType ReturnValue{E_NOT_OK};
-
     if(Microseconds <= PeriodMax) {
         /* OCR2A is TOP in phase correct PWM mode */
         OCR2A = getTimerCycles(Microseconds);
@@ -131,7 +129,7 @@ StdReturnType TimerTwo::setPeriod(TimeType Microseconds)
         }
         return E_OK;
     }
-    return ReturnValue;
+    return E_NOT_OK;
 } /* setPeriod */
 
 
@@ -177,15 +175,12 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
 {
-    StdReturnType returnValue{E_NOT_OK};
-
     if(PWM_PIN_3 == PwmPin) {
-        returnValue = E_OK;
         /* deactivate compare output mode in timer control register */
         writeBit(TCCR2A, COM2B1, 0u);
-    } 
-
-    return returnValue;
+		return E_OK;
+    }
+    return E_NOT_OK;
 } /* disablePwm */
 
 
@@ -203,8 +198,6 @@ StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
 {
-    StdReturnType ReturnValue{E_NOT_OK};
-
     if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State)) {
         /* duty cycle out of bound? */
         if(DutyCycle <= TIMERTWO_RESOLUTION) {
@@ -214,12 +207,12 @@ StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
             DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
             /* set output compare register value for given Pwm pin */
             if(PWM_PIN_3 == PwmPin) {
-                ReturnValue = E_OK;
                 OCR2B = DutyCycleTrans;
+				return E_OK;
             }
         }
     }
-    return ReturnValue;
+    return E_NOT_OK;
 } /* setPwmDuty */
 
 
