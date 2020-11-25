@@ -41,7 +41,7 @@ Reads the time since last rollover in microseconds.
 ```c++
 /*
  This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3 and PIN11.
- The frequency depends on the period of the timer
+ The frequency depends on the period of the timer.
 */
 
 #define PIN_TOGGLE          13u
@@ -52,6 +52,7 @@ void timerCallback() {
 
 void setup() {
   pinMode(PIN_TOGGLE, OUTPUT);
+  // Initialize timer with a period of 1000 milliseconds.
   Timer2.init(1000u, timerCallback);
   Timer2.start();
   Timer2.enablePWM(TimerTwo::PWM_PIN_3, 127);

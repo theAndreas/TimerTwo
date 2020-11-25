@@ -123,12 +123,12 @@ class TimerTwo
     static TimerTwo& getInstance();
 
     // get methods
-	StateType getState() const { return State; }
-	TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
-	
-	// set methods
+    StateType getState() const { return State; }
+    TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
+    
+    // set methods
 
-	// methods
+    // methods
     StdReturnType init(uint32_t = 1000uL, TimerIsrCallbackF_void = nullptr);
     StdReturnType setPeriod(uint32_t);
     StdReturnType enablePwm(PwmPinType, byte);
