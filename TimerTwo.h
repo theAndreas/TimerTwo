@@ -112,7 +112,7 @@ class TimerTwo
     ~TimerTwo();
     TimerTwo(const TimerTwo&);
 
-    TimerIsrCallbackF_void TimerOverflowCallback;
+    TimerIsrCallbackF_void TimerIsrOverflowCallback;
     StateType State;
     ClockSelectType ClockSelectBitGroup;
 
@@ -124,7 +124,7 @@ class TimerTwo
 
     // get methods
 	StateType getState() const { return State; }
-	TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerOverflowCallback; }
+	TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
 	
 	// set methods
 
@@ -140,7 +140,7 @@ class TimerTwo
     StdReturnType attachInterrupt(TimerIsrCallbackF_void);
     void detachInterrupt();
     StdReturnType read(uint32_t&);
-    void callOverflowCallback() { TimerOverflowCallback(); }
+    void callTimerIsrOverflowCallback() { TimerIsrOverflowCallback(); }
 };
 
 /* TimerTwo will be pre-instantiated in TimerTwo source file */

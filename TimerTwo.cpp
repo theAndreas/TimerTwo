@@ -44,7 +44,7 @@ TimerTwo& Timer2 = TimerTwo::getInstance();              // pre-instantiate Time
 TimerTwo::TimerTwo()
 {
 	State = STATE_INIT;
-	TimerOverflowCallback = nullptr;
+	TimerIsrOverflowCallback = nullptr;
 	ClockSelectBitGroup = REG_CS_NO_CLOCK;
 } /* TimerTwo */
 
@@ -275,7 +275,7 @@ StdReturnType TimerTwo::start()
 		/* start counter by setting clock select register */
 		writeBitGroup(TCCR2B, TIMERTWO_REG_CS_GM, TIMERTWO_REG_CS_GP, ClockSelectBitGroup);
 		/* set overflow interrupt, if callback is set */
-		if(TimerOverflowCallback != nullptr) {
+		if(TimerIsrOverflowCallback != nullptr) {
 			/* wait until timer moved on from zero, otherwise get phantom interrupt */
 			do { TCNT2_tmp = TCNT2; } while (TCNT2_tmp == 0u);
 			/* enable timer overflow interrupt */
@@ -333,14 +333,14 @@ StdReturnType TimerTwo::resume()
 /*! \brief          set timer overflow interrupt callback
  *  \details        
  *                  
- *  \param[in]      sTimerOverflowCallback				timer overflow callback function
+ *  \param[in]      TimerOverflowCallback				timer overflow callback function
  *  \return         E_OK
  *                  E_NOT_OK
  *****************************************************************************************************************************************************/
-StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void sTimerOverflowCallback)
+StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void TimerOverflowCallback)
 {
-	if(sTimerOverflowCallback != nullptr) {
-		TimerOverflowCallback = sTimerOverflowCallback;
+	if(TimerOverflowCallback != nullptr) {
+		TimerIsrOverflowCallback = TimerOverflowCallback;
 		/* enable timer overflow interrupt */
 		if(State == STATE_RUNNING) writeBit(TIMSK2, TOIE2, 1u);
 		return E_OK;
@@ -429,7 +429,7 @@ StdReturnType TimerTwo::read(uint32_t& Microseconds)
 ******************************************************************************************************************************************************/
 ISR(TIMER2_OVF_vect)
 {
-	Timer2.callOverflowCallback();
+	Timer2.callTimerIsrOverflowCallback();
 }
 
 
