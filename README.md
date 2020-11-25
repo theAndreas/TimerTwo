@@ -8,7 +8,7 @@ Library is using the hardware timer two (Timer/Counter2) of the Arduino Uno.
 The most functions have parameter checks and some other checks (e. g. state checks of the library) implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
 
 ### init(Microseconds, OverflowCallback)
-You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set at 1 millisecond. Note that this breaks analogWrite() for digital pin 3 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
+You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set to 1 millisecond. Note that this breaks analogWrite() for digital pin 3 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
 
 ### start()
 Starts the timer. Note init() has to be called first.
@@ -17,7 +17,7 @@ Starts the timer. Note init() has to be called first.
 Stops the timer by removing the timer clock.
 
 ### setPeriod(Microseconds)
-Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32767 microseconds (can be retrieved by getPeriodMax()) or about 0.032767 seconds. Note that setting the period will change the attached interrupt and both PWM outputs' frequencies and duty cycles simultaneously.
+Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32767 microseconds (can be retrieved by getPeriodMax()) or about 0.032767 seconds. Note that setting the period will change the attached interrupt and the PWM output frequency and duty cycle simultaneously.
 
 ### enablePwm(PwmPin, DutyCycle)
 Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 3 (Pwm_PIN_3). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
