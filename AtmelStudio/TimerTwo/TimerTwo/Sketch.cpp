@@ -14,14 +14,17 @@ void timerCallback() {
 
 void setup() {
   pinMode(PIN_TOGGLE, OUTPUT);
-  if(Timer2.init(1000u, timerCallback) == E_NOT_OK) {
+  if(Timer2.init(Timer2.getPeriodMax(), timerCallback) == E_NOT_OK) {
 	  // something went wrong, check your parameters
+      while(1);
   }
   if(Timer2.start() == E_NOT_OK) {
 	  // something went wrong, has init function already been called?
+      while(1);
   }
   if(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127) == E_NOT_OK) {
       // something went wrong, has init function already been called?
+      while(1);
   }
 }
 

@@ -32,7 +32,7 @@
  *****************************************************************************************************************************************************/
 /* Timer2 is 8 bit */
 #define TIMERTWO_NUMBER_OF_BITS                     8u
-#define TIMERTWO_RESOLUTION                         (1UL << TIMERTWO_NUMBER_OF_BITS)
+#define TIMERTWO_RESOLUTION                         (1uL << TIMERTWO_NUMBER_OF_BITS)
 
 /* OC2A Chip Pin 17, Pin name PB3 */
 #define TIMERTWO_A_ARDUINO_PIN                      11u
@@ -71,6 +71,7 @@ class TimerTwo
   public:
     /* Timer ISR callback function */
     typedef void (*TimerIsrCallbackF_void)(void);
+    using TimeType = uint16_t;
 
     /* Type which describes the internal state of the TimerTwo */
     enum StateType {
@@ -112,9 +113,14 @@ class TimerTwo
     ~TimerTwo();
     TimerTwo(const TimerTwo&);
 
+    static const TimeType PeriodMax{((TIMERTWO_RESOLUTION / (F_CPU / 1000000uL)) * TIMERTWO_MAX_PRESCALER * 2u) - 1u};
     TimerIsrCallbackF_void TimerIsrOverflowCallback;
     StateType State;
     ClockSelectType ClockSelectBitGroup;
+    
+    // methods
+    byte getPrescaleShiftScale();
+    byte getTimerCycles(uint32_t);
 
 /******************************************************************************************************************************************************
  *  P U B L I C   F U N C T I O N S
@@ -125,12 +131,12 @@ class TimerTwo
     // get methods
     StateType getState() const { return State; }
     TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
-    
+    TimeType getPeriodMax() { return PeriodMax; }
     // set methods
 
     // methods
-    StdReturnType init(uint32_t = 1000uL, TimerIsrCallbackF_void = nullptr);
-    StdReturnType setPeriod(uint32_t);
+    StdReturnType init(TimeType = 1000uL, TimerIsrCallbackF_void = nullptr);
+    StdReturnType setPeriod(TimeType);
     StdReturnType enablePwm(PwmPinType, byte);
     StdReturnType disablePwm(PwmPinType);
     StdReturnType setPwmDuty(PwmPinType, byte);
@@ -139,8 +145,9 @@ class TimerTwo
     StdReturnType resume();
     StdReturnType attachInterrupt(TimerIsrCallbackF_void);
     void detachInterrupt();
-    StdReturnType read(uint32_t&);
+    StdReturnType read(TimeType&);
     void callTimerIsrOverflowCallback() { TimerIsrOverflowCallback(); }
+      
 };
 
 /* TimerTwo will be pre-instantiated in TimerTwo source file */

@@ -17,7 +17,7 @@ Starts the timer. Note init() has to be called first.
 Stops the timer by removing the timer clock.
 
 ### setPeriod(Microseconds)
-Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32768 microseconds or about 0.032768 seconds. Note that setting the period will change the attached interrupt and both PWM outputs' frequencies and duty cycles simultaneously.
+Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32767 microseconds (can be retrieved by getPeriodMax()) or about 0.032767 seconds. Note that setting the period will change the attached interrupt and both PWM outputs' frequencies and duty cycles simultaneously.
 
 ### enablePwm(PwmPin, DutyCycle)
 Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 3 (Pwm_PIN_3). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
