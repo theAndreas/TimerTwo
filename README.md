@@ -63,4 +63,4 @@ void loop() {
 }
 ```
 
-For a more advanced usage see also Sketch.ino file.
+For a more advanced usage see also *Sketch.ino* file.
