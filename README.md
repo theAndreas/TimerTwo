@@ -40,7 +40,7 @@ Reads the time since last rollover in microseconds.
 ## Usage
 ```c++
 /*
- This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3 and PIN11.
+ This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3.
  The frequency depends on the period of the timer.
 */
 
@@ -62,3 +62,5 @@ void loop() {
 
 }
 ```
+
+For a more advanced usage see also Sketch.ino file.
