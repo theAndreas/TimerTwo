@@ -1,13 +1,14 @@
 # TimerTwo
 Arduino Timer2 library. This is a simple adaption of the Arduino Timer1 library. For more information see https://playground.arduino.cc/Code/Timer1/.
+Library is using the hardware timer two (Timer/Counter2) of the Arduino Uno.
 
 ## Small API description
 
 ### General 
-The most functions have parameter checks and some other checks implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
+The most functions have parameter checks and some other checks (e. g. state checks of the library) implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
 
 ### init(Microseconds, sTimerOverflowCallback)
-You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set at 1 millisecond. Note that this breaks analogWrite() for digital pins 9 and 10 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
+You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set at 1 millisecond. Note that this breaks analogWrite() for digital pin 3 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
 
 ### start()
 Starts the timer. Note init() has to be called first.
@@ -16,21 +17,21 @@ Starts the timer. Note init() has to be called first.
 Stops the timer by removing the timer clock.
 
 ### setPeriod(Microseconds)
-Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32768 microseconds or about 0.032768 seconds. Note that setting the period will change the attached interrupt and both pwm outputs' frequencies and duty cycles simultaneously.
+Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32768 microseconds or about 0.032768 seconds. Note that setting the period will change the attached interrupt and both PWM outputs' frequencies and duty cycles simultaneously.
 
-### enablePwm(PwmPin, DutyCycle)
-Generates a PWM waveform on the specified pin. Output pins for Timer1 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3 (PWM_PIN_3). But the library supports Pwm only for Pin3. Because in the Timer Mode 5 PWM, Phase Correct the register (OCRA) is used to save the top value. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
+### enablePWM(PWMPin, DutyCycle)
+Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 3 (PWM_PIN_3). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
 
 ### attachInterrupt(sTimerOverflowCallback)
 Calls a function at the specified interval in microseconds. Be careful about trying to execute too complicated of an interrupt at too high of a frequency, or the CPU may never enter the main loop and your program will 'lock up'.
 
-### setPwmDuty(PwmPin, DutyCycle)
-A fast shortcut for setting the pwm duty for a given pin if you have already set it up by calling enablePwm() earlier. This avoids the overhead of enabling pwm mode for the pin, setting the data direction register, checking for optional period adjustments etc. that are mandatory when you call enablePwm().
+### setPWMDuty(PWMPin, DutyCycle)
+A fast shortcut for setting the PWM duty for a given pin if you have already set it up by calling enablePWM() earlier. This avoids the overhead of enabling PWM mode for the pin, setting the data direction register, checking for optional period adjustments etc. that are mandatory when you call enablePWM().
 
 ### detachInterrupt()
 Disables the attached interrupt.
 
-### disablePwm(PwmPin)
+### disablePWM(PWMPin)
 Turns PWM off for the specified pin so you can use that pin for something else.
 
 ### read()
@@ -53,7 +54,7 @@ void setup() {
   pinMode(PIN_TOGGLE, OUTPUT);
   Timer2.init(1000u, timerCallback);
   Timer2.start();
-  Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
+  Timer2.enablePWM(TimerTwo::PWM_PIN_3, 127);
 }
 
 void loop() {
