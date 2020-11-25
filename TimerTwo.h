@@ -71,7 +71,12 @@ class TimerTwo
   public:
     /* Timer ISR callback function */
     typedef void (*TimerIsrCallbackF_void)(void);
+
+#if F_CPU < 8000000uL
+    using TimeType = uint32_t;
+#else
     using TimeType = uint16_t;
+#endif
 
     /* Type which describes the internal state of the TimerTwo */
     enum StateType {
@@ -120,7 +125,7 @@ class TimerTwo
     
     // methods
     byte getPrescaleShiftScale();
-    byte getTimerCycles(uint32_t);
+    byte getTimerCycles(TimeType);
 
 /******************************************************************************************************************************************************
  *  P U B L I C   F U N C T I O N S

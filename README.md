@@ -7,7 +7,7 @@ Library is using the hardware timer two (Timer/Counter2) of the Arduino Uno.
 ### General 
 The most functions have parameter checks and some other checks (e. g. state checks of the library) implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
 
-### init(Microseconds, sTimerOverflowCallback)
+### init(Microseconds, OverflowCallback)
 You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set at 1 millisecond. Note that this breaks analogWrite() for digital pin 3 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
 
 ### start()

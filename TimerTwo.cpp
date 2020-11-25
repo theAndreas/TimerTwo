@@ -204,16 +204,15 @@ StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
 StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
 {
     StdReturnType ReturnValue{E_NOT_OK};
-    uint32_t DutyCycleTrans;
 
     if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State)) {
         /* duty cycle out of bound? */
         if(DutyCycle <= TIMERTWO_RESOLUTION) {
             // use rule of three to calculate duty cycle related to timer top value 
             // OCR2A is top value of timer
-            DutyCycleTrans = OCR2A * DutyCycle;
+            uint32_t DutyCycleTrans = OCR2A * DutyCycle;
             DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
-            /* set output compare register value for given pwm pin */
+            /* set output compare register value for given Pwm pin */
             if(PWM_PIN_3 == PwmPin) {
                 ReturnValue = E_OK;
                 OCR2B = DutyCycleTrans;
@@ -397,7 +396,7 @@ inline byte TimerTwo::getPrescaleShiftScale()
 /******************************************************************************************************************************************************
   getPrescaleShiftScale()
 ******************************************************************************************************************************************************/
-inline byte TimerTwo::getTimerCycles(uint32_t Microseconds)
+inline byte TimerTwo::getTimerCycles(TimeType Microseconds)
 {
     /* calculate timer cycles to reach timer period, counter runs backwards after TOP, interrupt is at BOTTOM so divide microseconds by 2 */
     uint32_t TimerCycles = (F_CPU / 2000000uL) * Microseconds;
