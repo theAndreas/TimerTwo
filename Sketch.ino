@@ -1,14 +1,27 @@
 #include <TimerTwo.h>
 
-void timerCbk() {
-   digitalWrite(11, !digitalRead(11));
-}
+/*
+ This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3.
+ The frequency of the PWM depends on the period of the timer.
+*/
+
+#define PIN_TOGGLE          13u
+
+void timerCallback() {
+    digitalWrite(PIN_TOGGLE, !digitalRead(PIN_TOGGLE));
+};
 
 void setup() {
-  pinMode(11, OUTPUT);
-  //digitalWrite(11, HIGH);
-  Timer2.init(5000ul, timerCbk);
-  Timer2.start();
+  pinMode(PIN_TOGGLE, OUTPUT);
+  if(Timer2.init(1000u, timerCallback) == E_NOT_OK) {
+	  // something went wrong, check your parameters.
+  }
+  if(Timer2.start() == E_NOT_OK) {
+	  // something went wrong, has init function already been called?
+  }
+  if(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127) == E_NOT_OK) {
+      // something went wrong, has init function already been called?
+  }
 }
 
 void loop() {

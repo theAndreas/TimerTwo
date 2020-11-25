@@ -179,7 +179,7 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
 			/* activate compare output mode in timer control register */
 			writeBit(TCCR2A, COM2B1, 1u);
 		}
-        /* Pwm Pin 11 can not be used in Timer Mode 5
+        /* Pwm Pin 11 can be activated but duty cycle can not be set
         if(PWM_PIN_11 == PwmPin) {
 			ReturnValue = E_OK;
 			pinMode(PWM_PIN_11, OUTPUT);

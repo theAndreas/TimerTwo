@@ -95,7 +95,7 @@ class TimerTwo
     /*
         Info: PWM for Pin 11 can not be used because in Mode 5 (PWM, Phase Correct) 
               OCRA is TOP value of the Timer/Counter. So Duty Cycle for OC2A Pin 11
-              can not be set, otherwise counter to value will be overwritten.
+              can not be set, otherwise counter top value will be overwritten.
     */
 
     /* Type which includes the Pwm Pins */
