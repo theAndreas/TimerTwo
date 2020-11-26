@@ -341,17 +341,8 @@ void TimerTwo::detachInterrupt()
 StdReturnType TimerTwo::read(TimeType& Microseconds)
 {
     if((STATE_RUNNING == State) || (STATE_STOPPED == State)) {
-        /* save current timer value */
-        TimeType counterValue{TCNT2}, counterValueNew;
-        /* wait one counter tick, needed to find out counter counting up or down */
-        /* max delay can be 1023 clock cycles depends on the clock pre-scaler */
-        do{ counterValueNew = TCNT2; } while (counterValue == counterValueNew);
-        /* if counter counting down, add top value to current value */
-        if(counterValueNew < counterValue) {
-            counterValue = (OCR2A - counterValue) + OCR2A;
-        }
         /* transform counter value to microseconds in an efficient way */
-        Microseconds = (((counterValue * 2000uL) / (F_CPU / 1000uL)) << getPrescaleShiftScale()) >> 1u;
+        Microseconds = (getCounterValue() * 1000uL << getPrescaleShiftScale()) / (F_CPU / 1000uL);
         return E_OK;
     }
     return E_NOT_OK;
@@ -412,6 +403,23 @@ inline byte TimerTwo::getTimerCycles(TimeType Microseconds)
     else if((TimerCycles >>= 2u) < TIMERTWO_RESOLUTION) ClockSelectBitGroup = REG_CS_PRESCALE_1024;
 
     return TimerCycles;
+}
+
+/******************************************************************************************************************************************************
+  getCounterValue()
+******************************************************************************************************************************************************/
+inline TimerTwo::TimeType TimerTwo::getCounterValue()
+{
+	/* save current timer value */
+	TimeType counterValue{TCNT2}, counterValueNew;
+	/* wait one counter tick, needed to find out counter counting up or down */
+	/* max delay can be 1023 clock cycles depends on the clock pre-scaler */
+	do{ counterValueNew = TCNT2; } while (counterValue == counterValueNew);
+	/* if counter counting down, add top value to current value */
+	if(counterValueNew < counterValue) {
+		counterValue = (OCR2A - counterValue) + OCR2A;
+	}
+	return counterValue;
 }
 
 /******************************************************************************************************************************************************
