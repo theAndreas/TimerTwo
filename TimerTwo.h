@@ -152,7 +152,7 @@ class TimerTwo
     void detachInterrupt();
     StdReturnType read(TimeType&);
     void callTimerIsrOverflowCallback() { TimerIsrOverflowCallback(); }
-      
+
 };
 
 /* TimerTwo will be pre-instantiated in TimerTwo source file */
