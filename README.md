@@ -35,7 +35,7 @@ Disables the attached interrupt.
 Turns PWM off for the specified pin so you can use that pin for something else.
 
 ### read()
-Reads the time since last rollover in microseconds.
+Reads the time since last rollover in microseconds. The resolution of the time is only as high as the resolution of the timer. Means F_CPU / prescaler of the timer. The prescaler is calculated by setting the period of the timer. The accuracy of the result also depends on calculation. This is only performed as an integer division, therefore deviations can still occur due to truncation.
 
 ## Usage
 ```c++
