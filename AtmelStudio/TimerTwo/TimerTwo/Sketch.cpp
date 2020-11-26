@@ -28,7 +28,7 @@ void setup() {
     }
     
     // delay of 20ms
-    delay(5u);
+    delay(20u);
     TimerTwo::TimeType elapsedTime{0u};
 
     if(Timer2.read(elapsedTime) == E_NOT_OK) {
