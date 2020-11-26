@@ -136,7 +136,7 @@ class TimerTwo
     // get methods
     StateType getState() const { return State; }
     TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
-    TimeType getPeriodMax() const { return PeriodMax; }
+    static TimeType getPeriodMax() { return PeriodMax; }
     // set methods
 
     // methods
