@@ -119,7 +119,7 @@ class TimerTwo
     TimerTwo(const TimerTwo&);
 	TimerTwo & operator = (const TimerTwo&);
 
-    static const TimeType PeriodMax{((TIMERTWO_RESOLUTION / (F_CPU / 1000000uL)) * TIMERTWO_MAX_PRESCALER * 2u) - 1u};
+    static const TimeType PeriodMax{(((TIMERTWO_RESOLUTION * 1000uL) / (F_CPU / 1000uL)) * TIMERTWO_MAX_PRESCALER * 2u) - 1u};
     TimerIsrCallbackF_void TimerIsrOverflowCallback;
     StateType State;
     ClockSelectType ClockSelectBitGroup;
