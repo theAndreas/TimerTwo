@@ -1,6 +1,6 @@
 ﻿#include <TimerTwo.h>
 /*
- This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3.
+ This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN11.
  The frequency of the PWM depends on the period of the timer. Furthermore the
  use of the read function is demonstrated.
 */
@@ -18,7 +18,7 @@ void setup() {
 	    // Something went wrong, check your parameters
         while(1);
     }
-    if(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127) == E_NOT_OK) {
+    if(Timer2.enablePwm(TimerTwo::PWM_PIN_11, 127) == E_NOT_OK) {
         // Something went wrong, has init function already been called?
         while(1);
     }

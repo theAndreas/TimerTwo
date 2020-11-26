@@ -118,7 +118,7 @@ StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void sTime
 ******************************************************************************************************************************************************/
 /*! \brief          set period of Timer2 overflow interrupt
  *  \details        this functions sets the period of the Timer2 overflow interrupt therefore 
- *                  prescaler and timer top value will be calculated
+ *                  pre-scaler and timer top value will be calculated
  *  \param[in]      Microseconds                period of the timer overflow interrupt
  *  \return         E_OK
  *                  E_NOT_OK - Given period is out of bound
@@ -157,9 +157,9 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
 
     if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State))
     {   
-        if(PWM_PIN_3 == PwmPin) {
+        if(PWM_PIN_11 == PwmPin) {
             ReturnValue = E_OK;
-            pinMode(PWM_PIN_3, OUTPUT);
+            pinMode(PWM_PIN_11, OUTPUT);
             /* activate compare output mode in timer control register */
             writeBit(TCCR2A, COM2B1, 1u);
         }
@@ -181,7 +181,7 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
 {
-    if(PWM_PIN_3 == PwmPin) {
+    if(PWM_PIN_11 == PwmPin) {
         /* deactivate compare output mode in timer control register */
         writeBit(TCCR2A, COM2B1, 0u);
 		return E_OK;
@@ -212,7 +212,7 @@ StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
             uint32_t DutyCycleTrans = OCR2A * DutyCycle;
             DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
             /* set output compare register value for given Pwm pin */
-            if(PWM_PIN_3 == PwmPin) {
+            if(PWM_PIN_11 == PwmPin) {
                 OCR2B = DutyCycleTrans;
 				return E_OK;
             }
