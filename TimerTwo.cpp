@@ -342,13 +342,16 @@ StdReturnType TimerTwo::read(TimeType& Microseconds)
 {
     if((STATE_RUNNING == State) || (STATE_STOPPED == State)) {
         /* save current timer value */
-        byte counterValue{TCNT2};
+        TimeType counterValue{TCNT2}, counterValueNew;
         /* wait one counter tick, needed to find out counter counting up or down */
-        do { counterValue = TCNT2; } while (counterValue == counterValue);
+        /* max delay can be 1023 clock cycles depends on the clock pre-scaler */
+        do{ counterValueNew = TCNT2; } while (counterValue == counterValueNew);
         /* if counter counting down, add top value to current value */
-        if(counterValue < counterValue) { counterValue = (OCR2A - counterValue) + OCR2A; }
+        if(counterValueNew < counterValue) {
+            counterValue = (OCR2A - counterValue) + OCR2A;
+        }
         /* transform counter value to microseconds in an efficient way */
-        Microseconds = ((counterValue * 1000uL) / (F_CPU / 1000uL)) << getPrescaleShiftScale();
+        Microseconds = (((counterValue * 2000uL) / (F_CPU / 1000uL)) << getPrescaleShiftScale()) >> 1u;
         return E_OK;
     }
     return E_NOT_OK;
