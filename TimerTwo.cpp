@@ -412,7 +412,7 @@ inline TimerTwo::TimeType TimerTwo::getCounterValue()
 {
 	/* save current timer value */
 	TimeType counterValue{TCNT2}, counterValueNew;
-	/* wait one counter tick, needed to find out counter counting up or down */
+	/* wait one counter tick, needed to find out if counter counting up or down */
 	/* max delay can be 1023 clock cycles depends on the clock pre-scaler */
 	do{ counterValueNew = TCNT2; } while (counterValue == counterValueNew);
 	/* if counter counting down, add top value to current value */

@@ -2,7 +2,7 @@
 Arduino Timer2 library. This is a simple adaption of the Arduino Timer1 library. For more information see https://playground.arduino.cc/Code/Timer1/.
 Library is using the hardware timer two (Timer/Counter2) of the Arduino Uno.
 
-## Small API description
+## API description
 
 ### General 
 The most functions have parameter checks and some other checks (e. g. state checks of the library) implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
