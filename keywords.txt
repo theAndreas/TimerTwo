@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For TimerTwo
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+TimerTwo                       KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+init                           KEYWORD2
+start                          KEYWORD2
+stop                           KEYWORD2
+read                           KEYWORD2
+enablePwm                      KEYWORD2
+disablePwm                     KEYWORD2
+attachInterrupt                KEYWORD2
+detachInterrupt                KEYWORD2
+setPeriod                      KEYWORD2
+setPwmDuty                     KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+
