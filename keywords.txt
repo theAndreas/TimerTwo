@@ -15,6 +15,7 @@ TimerTwo                       KEYWORD1
 init                           KEYWORD2
 start                          KEYWORD2
 stop                           KEYWORD2
+resume                         KEYWORD2
 read                           KEYWORD2
 enablePwm                      KEYWORD2
 disablePwm                     KEYWORD2

@@ -22,15 +22,17 @@
  * INCLUDES
  *****************************************************************************************************************************************************/
 #include "Arduino.h"
-#include <avr/io.h>
-#include <avr/interrupt.h>
 #include <StandardTypes.h>
 
 
 /******************************************************************************************************************************************************
  *  LOCAL CONSTANT MACROS
  *****************************************************************************************************************************************************/
-/* Timer2 is 8 bit */
+/* Timer2 configuration parameter */
+#define Timer2										TimerTwo::getInstance()
+
+/* Timer2 parameter */
+/* Atmega Timer2 is 8 bit */
 #define TIMERTWO_NUMBER_OF_BITS                     8u
 #define TIMERTWO_RESOLUTION                         (1uL << TIMERTWO_NUMBER_OF_BITS)
 
@@ -70,7 +72,7 @@ class TimerTwo
  *  P U B L I C   D A T A   T Y P E S   A N D   S T R U C T U R E S
 ******************************************************************************************************************************************************/
   public:
-    /* Timer ISR callback function */
+    /* Timer ISR callback function type */
     typedef void (*TimerIsrCallbackF_void)(void);
 
 #if F_CPU < 8000000uL
@@ -120,7 +122,7 @@ class TimerTwo
 	TimerTwo & operator = (const TimerTwo&);
 
     static const TimeType PeriodMax{(((TIMERTWO_RESOLUTION * 1000uL) / (F_CPU / 1000uL)) * TIMERTWO_MAX_PRESCALER * 2u) - 1u};
-    TimerIsrCallbackF_void TimerIsrOverflowCallback;
+    TimerIsrCallbackF_void OverflowCallback;
     StateType State;
     ClockSelectType ClockSelectBitGroup;
     
@@ -137,7 +139,7 @@ class TimerTwo
 
     // get methods
     StateType getState() const { return State; }
-    TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
+    TimerIsrCallbackF_void getOverflowCallback() const { return OverflowCallback; }
     static TimeType getPeriodMax() { return PeriodMax; }
     // set methods
 
@@ -153,12 +155,9 @@ class TimerTwo
     StdReturnType attachInterrupt(TimerIsrCallbackF_void);
     void detachInterrupt();
     StdReturnType read(TimeType&);
-    void callTimerIsrOverflowCallback() { TimerIsrOverflowCallback(); }
+    void callOverflowCallback() { OverflowCallback(); }
 
 };
-
-/* TimerTwo will be pre-instantiated in TimerTwo source file */
-extern TimerTwo& Timer2;
 
 #endif
 

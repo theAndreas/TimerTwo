@@ -21,12 +21,12 @@
  * INCLUDES
  *****************************************************************************************************************************************************/
 #include "TimerTwo.h"
-
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 /******************************************************************************************************************************************************
  * GLOBAL DATA
  *****************************************************************************************************************************************************/
-TimerTwo& Timer2 = TimerTwo::getInstance();              // pre-instantiate TimerTwo
 
 
 /******************************************************************************************************************************************************
@@ -44,7 +44,7 @@ TimerTwo& Timer2 = TimerTwo::getInstance();              // pre-instantiate Time
 TimerTwo::TimerTwo()
 {
     State = STATE_INIT;
-    TimerIsrOverflowCallback = nullptr;
+    OverflowCallback = nullptr;
     ClockSelectBitGroup = REG_CS_NO_CLOCK;
 } /* TimerTwo */
 
@@ -85,12 +85,12 @@ TimerTwo& TimerTwo::getInstance()
  *  \details        this functions initializes the Timer2 hardware
  *                  
  *  \param[in]      Microseconds                period of the timer overflow interrupt
- *  \param[in]      sTimerOverflowCallback      Callback function which should be called when timer overflow interrupt occurs
+ *  \param[in]      OverflowCallback            Callback function which should be called when timer overflow interrupt occurs
  *  \return         E_OK
  *                  E_NOT_OK - TimerTwo is already initialized or given period is out of bounds
  *  \pre            Timer has to be in NONE state
  *****************************************************************************************************************************************************/
-StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void sTimerOverflowCallback)
+StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void OverflowCallback)
 {
     StdReturnType ReturnValue = E_NOT_OK;
 
@@ -106,7 +106,7 @@ StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void sTime
         writeBit(TCCR2B, WGM22, 1u);
         
         if(setPeriod(Microseconds) == E_NOT_OK) { ReturnValue = E_NOT_OK; }
-        if(sTimerOverflowCallback != nullptr) { attachInterrupt(sTimerOverflowCallback); }
+        if(OverflowCallback != nullptr) { attachInterrupt(OverflowCallback); }
         State = STATE_IDLE;
     }
         return ReturnValue;
@@ -240,7 +240,7 @@ StdReturnType TimerTwo::start()
         /* start counter by setting clock select register */
         writeBitGroup(TCCR2B, TIMERTWO_REG_CS_GM, TIMERTWO_REG_CS_GP, ClockSelectBitGroup);
         /* set overflow interrupt, if callback is set */
-        if(TimerIsrOverflowCallback != nullptr) {
+        if(OverflowCallback != nullptr) {
             /* wait until timer moved on from zero, otherwise get phantom interrupt */
             while (TCNT2 == 0u);
             /* enable timer overflow interrupt */
@@ -296,14 +296,14 @@ StdReturnType TimerTwo::resume()
 /*! \brief          set timer overflow interrupt callback
  *  \details        
  *                  
- *  \param[in]      TimerOverflowCallback               timer overflow callback function
+ *  \param[in]      OverflowCallback               timer overflow callback function
  *  \return         E_OK
  *                  E_NOT_OK - Callback function is nullptr
  *****************************************************************************************************************************************************/
-StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void TimerOverflowCallback)
+StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void OverflowCallback)
 {
-    if(TimerOverflowCallback != nullptr) {
-        TimerIsrOverflowCallback = TimerOverflowCallback;
+    if(OverflowCallback != nullptr) {
+        this->OverflowCallback = OverflowCallback;
         /* enable timer overflow interrupt */
         if(State == STATE_RUNNING) writeBit(TIMSK2, TOIE2, 1u);
         return E_OK;
@@ -428,7 +428,7 @@ inline TimerTwo::TimeType TimerTwo::getCounterValue()
 ISR(TIMER2_OVF_vect)
 {
 	/* Timer overflow callback will be called from Interrupt context */
-    Timer2.callTimerIsrOverflowCallback();
+    Timer2.callOverflowCallback();
 }
 
 
