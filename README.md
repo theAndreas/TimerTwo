@@ -20,7 +20,7 @@ Stops the timer by removing the timer clock.
 Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32767 microseconds (can be retrieved by getPeriodMax()) or about 0.032767 seconds. Note that setting the period will change the attached interrupt and the PWM output frequency and duty cycle simultaneously.
 
 ### enablePwm(PwmPin, DutyCycle)
-Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 11 (Pwm_PIN_11). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
+Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 3 (PWM_PIN_3). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
 
 ### attachInterrupt(OverflowCallback)
 Calls a function at the specified interval in microseconds. Be careful about trying to execute too complicated of an interrupt at too high of a frequency, or the CPU may never enter the main loop and your program will 'lock up'.
@@ -40,7 +40,7 @@ Reads the time since last rollover in microseconds. The resolution of the time i
 ## Usage
 ```c++
 /*
- This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN11.
+ This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3.
  The frequency depends on the period of the timer.
 */
 
@@ -52,10 +52,10 @@ void timerCallback() {
 
 void setup() {
   pinMode(PIN_TOGGLE, OUTPUT);
-  // Initialize timer with a period of 1000 milliseconds.
+  // Initialize timer with a period of 1000 microseconds.
   Timer2.init(1000u, timerCallback);
   Timer2.start();
-  Timer2.enablePwm(TimerTwo::Pwm_PIN_11, 127);
+  Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
 }
 
 void loop() {
