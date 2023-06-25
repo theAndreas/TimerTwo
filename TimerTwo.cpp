@@ -21,12 +21,12 @@
  * INCLUDES
  *****************************************************************************************************************************************************/
 #include "TimerTwo.h"
-#include <avr/io.h>
-#include <avr/interrupt.h>
+
 
 /******************************************************************************************************************************************************
  * GLOBAL DATA
  *****************************************************************************************************************************************************/
+TimerTwo& Timer2 = TimerTwo::getInstance();              // pre-instantiate TimerTwo
 
 
 /******************************************************************************************************************************************************
@@ -44,7 +44,7 @@
 TimerTwo::TimerTwo()
 {
     State = STATE_INIT;
-    OverflowCallback = nullptr;
+    TimerIsrOverflowCallback = nullptr;
     ClockSelectBitGroup = REG_CS_NO_CLOCK;
 } /* TimerTwo */
 
@@ -59,18 +59,8 @@ TimerTwo::~TimerTwo()
 
 
 /******************************************************************************************************************************************************
- * P U B L I C   F U N C T I O N S
- *****************************************************************************************************************************************************/
- 
-/******************************************************************************************************************************************************
-  getInstance()
+  COPY CONSTRUCTOR OF TimerTwo
 ******************************************************************************************************************************************************/
-/*! \brief          Singleton implementation of TimerTwo
- *  \details        Singleton is useful here, because the Timer2 hardware exists only once
- *                  
- *  \return         Singleton instance of TimerTwo
- *  \pre            -
- *****************************************************************************************************************************************************/
 TimerTwo& TimerTwo::getInstance()
 {
     static TimerTwo SingletonInstance;
@@ -79,18 +69,22 @@ TimerTwo& TimerTwo::getInstance()
 
 
 /******************************************************************************************************************************************************
+ * P U B L I C   F U N C T I O N S
+ *****************************************************************************************************************************************************/
+
+/******************************************************************************************************************************************************
   init()
 ******************************************************************************************************************************************************/
 /*! \brief          initialization of the Timer2 hardware
  *  \details        this functions initializes the Timer2 hardware
  *                  
  *  \param[in]      Microseconds                period of the timer overflow interrupt
- *  \param[in]      OverflowCallback            Callback function which should be called when timer overflow interrupt occurs
+ *  \param[in]      sTimerOverflowCallback      Callback function which should be called when timer overflow interrupt occurs
  *  \return         E_OK
  *                  E_NOT_OK - TimerTwo is already initialized or given period is out of bounds
  *  \pre            Timer has to be in NONE state
  *****************************************************************************************************************************************************/
-StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void OverflowCallback)
+StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void sTimerOverflowCallback)
 {
     StdReturnType ReturnValue = E_NOT_OK;
 
@@ -106,7 +100,7 @@ StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void Overf
         writeBit(TCCR2B, WGM22, 1u);
         
         if(setPeriod(Microseconds) == E_NOT_OK) { ReturnValue = E_NOT_OK; }
-        if(OverflowCallback != nullptr) { attachInterrupt(OverflowCallback); }
+        if(sTimerOverflowCallback != nullptr) { attachInterrupt(sTimerOverflowCallback); }
         State = STATE_IDLE;
     }
         return ReturnValue;
@@ -118,14 +112,16 @@ StdReturnType TimerTwo::init(TimeType Microseconds, TimerIsrCallbackF_void Overf
 ******************************************************************************************************************************************************/
 /*! \brief          set period of Timer2 overflow interrupt
  *  \details        this functions sets the period of the Timer2 overflow interrupt therefore 
- *                  pre-scaler and timer top value will be calculated
+ *                  prescaler and timer top value will be calculated
  *  \param[in]      Microseconds                period of the timer overflow interrupt
  *  \return         E_OK
  *                  E_NOT_OK - Given period is out of bound
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::setPeriod(TimeType Microseconds)
 {
-    if(Microseconds <= PeriodMax) {
+    StdReturnType ReturnValue{E_NOT_OK};
+
+    if(Microseconds <= getPeriodMax()) {
         /* OCR2A is TOP in phase correct PWM mode */
         OCR2A = getTimerCycles(Microseconds);
 
@@ -135,7 +131,7 @@ StdReturnType TimerTwo::setPeriod(TimeType Microseconds)
         }
         return E_OK;
     }
-    return E_NOT_OK;
+    return ReturnValue;
 } /* setPeriod */
 
 
@@ -157,9 +153,9 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
 
     if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State))
     {   
-        if(PWM_PIN_11 == PwmPin) {
+        if(PWM_PIN_3 == PwmPin) {
             ReturnValue = E_OK;
-            pinMode(PWM_PIN_11, OUTPUT);
+            pinMode(PWM_PIN_3, OUTPUT);
             /* activate compare output mode in timer control register */
             writeBit(TCCR2A, COM2B1, 1u);
         }
@@ -181,12 +177,15 @@ StdReturnType TimerTwo::enablePwm(PwmPinType PwmPin, byte DutyCycle)
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
 {
-    if(PWM_PIN_11 == PwmPin) {
+    StdReturnType returnValue{E_NOT_OK};
+
+    if(PWM_PIN_3 == PwmPin) {
+        returnValue = E_OK;
         /* deactivate compare output mode in timer control register */
         writeBit(TCCR2A, COM2B1, 0u);
-		return E_OK;
-    }
-    return E_NOT_OK;
+    } 
+
+    return returnValue;
 } /* disablePwm */
 
 
@@ -204,6 +203,8 @@ StdReturnType TimerTwo::disablePwm(PwmPinType PwmPin)
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
 {
+    StdReturnType ReturnValue{E_NOT_OK};
+
     if((STATE_IDLE == State) || (STATE_RUNNING == State) || (STATE_STOPPED == State)) {
         /* duty cycle out of bound? */
         if(DutyCycle <= TIMERTWO_RESOLUTION) {
@@ -212,13 +213,13 @@ StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle)
             uint32_t DutyCycleTrans = OCR2A * DutyCycle;
             DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
             /* set output compare register value for given Pwm pin */
-            if(PWM_PIN_11 == PwmPin) {
+            if(PWM_PIN_3 == PwmPin) {
+                ReturnValue = E_OK;
                 OCR2B = DutyCycleTrans;
-				return E_OK;
             }
         }
     }
-    return E_NOT_OK;
+    return ReturnValue;
 } /* setPwmDuty */
 
 
@@ -240,7 +241,7 @@ StdReturnType TimerTwo::start()
         /* start counter by setting clock select register */
         writeBitGroup(TCCR2B, TIMERTWO_REG_CS_GM, TIMERTWO_REG_CS_GP, ClockSelectBitGroup);
         /* set overflow interrupt, if callback is set */
-        if(OverflowCallback != nullptr) {
+        if(TimerIsrOverflowCallback != nullptr) {
             /* wait until timer moved on from zero, otherwise get phantom interrupt */
             while (TCNT2 == 0u);
             /* enable timer overflow interrupt */
@@ -296,14 +297,14 @@ StdReturnType TimerTwo::resume()
 /*! \brief          set timer overflow interrupt callback
  *  \details        
  *                  
- *  \param[in]      OverflowCallback               timer overflow callback function
+ *  \param[in]      TimerOverflowCallback               timer overflow callback function
  *  \return         E_OK
  *                  E_NOT_OK - Callback function is nullptr
  *****************************************************************************************************************************************************/
-StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void OverflowCallback)
+StdReturnType TimerTwo::attachInterrupt(TimerIsrCallbackF_void TimerOverflowCallback)
 {
-    if(OverflowCallback != nullptr) {
-        this->OverflowCallback = OverflowCallback;
+    if(TimerOverflowCallback != nullptr) {
+        TimerIsrOverflowCallback = TimerOverflowCallback;
         /* enable timer overflow interrupt */
         if(State == STATE_RUNNING) writeBit(TIMSK2, TOIE2, 1u);
         return E_OK;
@@ -341,8 +342,16 @@ void TimerTwo::detachInterrupt()
 StdReturnType TimerTwo::read(TimeType& Microseconds)
 {
     if((STATE_RUNNING == State) || (STATE_STOPPED == State)) {
+        /* save current timer value */
+        byte counterValue{TCNT2};
+		byte TCNT2_tmp{TCNT2};
+		
+        /* wait one counter tick, needed to find out counter counting up or down */
+        do { TCNT2_tmp = TCNT2; } while (counterValue == TCNT2_tmp);
+        /* if counter counting down, add top value to current value */
+        if(TCNT2_tmp < counterValue) { counterValue = (OCR2A - counterValue) + OCR2A; }
         /* transform counter value to microseconds in an efficient way */
-        Microseconds = (getCounterValue() * 1000uL << getPrescaleShiftScale()) / (F_CPU / 1000uL);
+        Microseconds = ((counterValue * 1000uL) / (F_CPU / 1000uL)) << getPrescaleShiftScale();
         return E_OK;
     }
     return E_NOT_OK;
@@ -406,29 +415,11 @@ inline byte TimerTwo::getTimerCycles(TimeType Microseconds)
 }
 
 /******************************************************************************************************************************************************
-  getCounterValue()
-******************************************************************************************************************************************************/
-inline TimerTwo::TimeType TimerTwo::getCounterValue()
-{
-	/* save current timer value */
-	TimeType counterValue{TCNT2}, counterValueNew;
-	/* wait one counter tick, needed to find out if counter counting up or down */
-	/* max delay can be 1023 clock cycles depends on the clock pre-scaler */
-	do{ counterValueNew = TCNT2; } while (counterValue == counterValueNew);
-	/* if counter counting down, add top value to current value */
-	if(counterValueNew < counterValue) {
-		counterValue = (OCR2A - counterValue) + OCR2A;
-	}
-	return counterValue;
-}
-
-/******************************************************************************************************************************************************
   I S R   F U N C T I O N S
 ******************************************************************************************************************************************************/
 ISR(TIMER2_OVF_vect)
 {
-	/* Timer overflow callback will be called from Interrupt context */
-    Timer2.callOverflowCallback();
+    Timer2.callTimerIsrOverflowCallback();
 }
 
 
