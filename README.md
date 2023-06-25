@@ -23,7 +23,7 @@ Sets the period in microseconds. The minimum period or highest frequency this li
 Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 3 (PWM_PIN_3). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
 
 ### attachInterrupt(OverflowCallback)
-Calls a function at the specified interval in microseconds. Be careful about trying to execute too complicated of an interrupt at too high of a frequency, or the CPU may never enter the main loop and your program will 'lock up'.
+Calls a function at the specified interval in microseconds. Take care about the exution time of the code in the interrupt, or the CPU may never enter the main loop and your program will 'lock up'.
 
 ### setPwmDuty(PwmPin, DutyCycle)
 A fast shortcut for setting the PWM duty for a given pin if you have already set it up by calling enablePwm() earlier. This avoids the overhead of enabling PWM mode for the pin, setting the data direction register, checking for optional period adjustments etc. that are mandatory when you call enablePwm().
