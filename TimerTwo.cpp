@@ -341,9 +341,9 @@ void TimerTwo::detachInterrupt()
  *****************************************************************************************************************************************************/
 StdReturnType TimerTwo::read(TimeType& Microseconds)
 {
-    if((STATE_RUNNING == State) || (STATE_STOPPED == State)) {
+    if(STATE_RUNNING == State) {
         /* save current timer value */
-        byte counterValue{TCNT2};
+        uint16_t counterValue{TCNT2};
 		byte TCNT2_tmp{TCNT2};
 		
         /* wait one counter tick, needed to find out counter counting up or down */
