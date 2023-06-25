@@ -22,17 +22,15 @@
  * INCLUDES
  *****************************************************************************************************************************************************/
 #include "Arduino.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
 #include <StandardTypes.h>
 
 
 /******************************************************************************************************************************************************
  *  LOCAL CONSTANT MACROS
  *****************************************************************************************************************************************************/
-/* Timer2 configuration parameter */
-#define Timer2										TimerTwo::getInstance()
-
-/* Timer2 parameter */
-/* Atmega Timer2 is 8 bit */
+/* Timer2 is 8 bit */
 #define TIMERTWO_NUMBER_OF_BITS                     8u
 #define TIMERTWO_RESOLUTION                         (1uL << TIMERTWO_NUMBER_OF_BITS)
 
@@ -51,7 +49,6 @@
 #if __cplusplus < 201103L
 # define nullptr NULL
 #endif
-
 
 /******************************************************************************************************************************************************
  *  LOCAL FUNCTION MACROS
@@ -72,7 +69,7 @@ class TimerTwo
  *  P U B L I C   D A T A   T Y P E S   A N D   S T R U C T U R E S
 ******************************************************************************************************************************************************/
   public:
-    /* Timer ISR callback function type */
+    /* Timer ISR callback function */
     typedef void (*TimerIsrCallbackF_void)(void);
 
 #if F_CPU < 8000000uL
@@ -102,14 +99,15 @@ class TimerTwo
     };
     
     /*
-		PWM for Pin 3 can not be used because in Mode 5 (PWM, Phase Correct) 
-		OCRA is TOP value of the Timer/Counter. So Duty Cycle for OC2A Pin 3
-		can not be set, otherwise counter top value will be overwritten.
+        Info: PWM for Pin 11 can not be used because in Mode 5 (PWM, Phase Correct) 
+              OCRA is TOP value of the Timer/Counter. So Duty Cycle for OC2A Pin 11
+              can not be set, otherwise counter top value will be overwritten.
     */
+
     /* Type which includes the Pwm Pins */
     enum PwmPinType {
-        PWM_PIN_11 = TIMERTWO_A_ARDUINO_PIN,
-        //PWM_PIN_3 = TIMERTWO_B_ARDUINO_PIN
+        //PWM_PIN_11 = TIMERTWO_A_ARDUINO_PIN,
+        PWM_PIN_3 = TIMERTWO_B_ARDUINO_PIN
     };
 
 /******************************************************************************************************************************************************
@@ -119,17 +117,14 @@ class TimerTwo
     TimerTwo();
     ~TimerTwo();
     TimerTwo(const TimerTwo&);
-	TimerTwo & operator = (const TimerTwo&);
 
-    static const TimeType PeriodMax{(((TIMERTWO_RESOLUTION * 1000uL) / (F_CPU / 1000uL)) * TIMERTWO_MAX_PRESCALER * 2u) - 1u};
-    TimerIsrCallbackF_void OverflowCallback;
+    TimerIsrCallbackF_void TimerIsrOverflowCallback;
     StateType State;
     ClockSelectType ClockSelectBitGroup;
     
     // methods
     byte getPrescaleShiftScale();
     byte getTimerCycles(TimeType);
-	TimeType getCounterValue();
 
 /******************************************************************************************************************************************************
  *  P U B L I C   F U N C T I O N S
@@ -139,8 +134,8 @@ class TimerTwo
 
     // get methods
     StateType getState() const { return State; }
-    TimerIsrCallbackF_void getOverflowCallback() const { return OverflowCallback; }
-    static TimeType getPeriodMax() { return PeriodMax; }
+    TimerIsrCallbackF_void getTimerIsrCallbackFunction() const { return TimerIsrOverflowCallback; }
+    TimeType getPeriodMax() { return TimeType{((TIMERTWO_RESOLUTION / (F_CPU / 1000000uL)) * TIMERTWO_MAX_PRESCALER * 2u) - 1u}; }
     // set methods
 
     // methods
@@ -155,9 +150,12 @@ class TimerTwo
     StdReturnType attachInterrupt(TimerIsrCallbackF_void);
     void detachInterrupt();
     StdReturnType read(TimeType&);
-    void callOverflowCallback() { OverflowCallback(); }
-
+    void callTimerIsrOverflowCallback() { TimerIsrOverflowCallback(); }
+      
 };
+
+/* TimerTwo will be pre-instantiated in TimerTwo source file */
+extern TimerTwo& Timer2;
 
 #endif
 
