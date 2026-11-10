@@ -4,7 +4,21 @@
 # cppcoreguidelines-avoid-non-const-global-variables: a sketch shares its
 # state between setup(), loop() and its interrupts through globals; the
 # Arduino core gives it no other place.
+# TimerTwo's own, for now: the groups that src/.clang-tidy turns off, until
+# version 2.0.0 (OIL 3). clang-tidy holds a header to the checks of the file
+# that includes it, so the examples would report the headers of src/ with
+# every check; and they use the API of before.
 InheritParentConfig: true
 Checks: >
   -readability-magic-numbers,
-  -cppcoreguidelines-avoid-non-const-global-variables
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-macro-parentheses,
+  -bugprone-signed-bitwise,
+  -clang-diagnostic-unreachable-code-break,
+  -cppcoreguidelines-*,
+  -google-*,
+  -misc-*,
+  -modernize-*,
+  -performance-enum-size,
+  -readability-*

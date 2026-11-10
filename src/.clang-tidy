@@ -1,0 +1,17 @@
+---
+# TimerTwo's code of 2023, until version 2.0.0 rewrites it in the namespace timer_two (OIL 3):
+# its names, macros, typedefs and unsuffixed C enums are what these groups report, some 450
+# places in src/ alone. They come on with 2.0.0, each with what it finds fixed, and this file
+# goes then. The tests and the mock are new and keep every check.
+InheritParentConfig: true
+Checks: >
+  -bugprone-assignment-in-if-condition,
+  -bugprone-macro-parentheses,
+  -bugprone-signed-bitwise,
+  -clang-diagnostic-unreachable-code-break,
+  -cppcoreguidelines-*,
+  -google-*,
+  -misc-*,
+  -modernize-*,
+  -performance-enum-size,
+  -readability-*

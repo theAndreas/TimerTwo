@@ -31,7 +31,8 @@
  * \param Bit the number of the bit
  * \param Value 0 or 1
  */
-#define writeBit(Var, Bit, Value) (Var = (Var & ~(1 << Bit)) | (Value << Bit))
+#define writeBit(Var, Bit, Value) \
+  ((Var) = static_cast<uint8_t>(((Var) & ~(1u << (Bit))) | ((Value) << (Bit))))
 
 /*!
  * \brief Reads the group of bits `BitGroupMask` of `Var`, shifted down by
@@ -51,8 +52,10 @@
  * \param Value the value of the group, not shifted
  */
 #define writeBitGroup(Var, BitGroupMask, BitGroupPosition, Value) \
-  (Var = ((Var & ~((uint8_t)BitGroupMask)) |                      \
-          ((Value << BitGroupPosition) & ((uint8_t)BitGroupMask))))
+  ((Var) = static_cast<uint8_t>(                                  \
+       ((Var) & ~static_cast<unsigned>(BitGroupMask)) |           \
+       ((static_cast<unsigned>(Value) << (BitGroupPosition)) &    \
+        static_cast<unsigned>(BitGroupMask))))
 
 /*! \brief Whether a function did what it was asked. */
 typedef enum {

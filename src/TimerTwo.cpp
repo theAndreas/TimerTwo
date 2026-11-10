@@ -97,17 +97,15 @@ StdReturnType TimerTwo::setPwmDuty(PwmPinType PwmPin, byte DutyCycle) {
 
   if ((STATE_IDLE == State) || (STATE_RUNNING == State) ||
       (STATE_STOPPED == State)) {
-    /* duty cycle out of bound? */
-    if (DutyCycle <= TIMERTWO_RESOLUTION) {
-      // use rule of three to calculate duty cycle related to timer top value
-      // OCR2A is top value of timer
-      uint32_t DutyCycleTrans = OCR2A * DutyCycle;
-      DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
-      /* set output compare register value for given Pwm pin */
-      if (PWM_PIN_3 == PwmPin) {
-        ReturnValue = E_OK;
-        OCR2B = DutyCycleTrans;
-      }
+    // use rule of three to calculate duty cycle related to timer top value
+    // OCR2A is top value of timer
+    uint32_t DutyCycleTrans = OCR2A * DutyCycle;
+    DutyCycleTrans >>= TIMERTWO_NUMBER_OF_BITS;
+    /* set output compare register value for given Pwm pin */
+    if (PWM_PIN_3 == PwmPin) {
+      ReturnValue = E_OK;
+      // At most 255 * 255 / 256.
+      OCR2B = static_cast<uint8_t>(DutyCycleTrans);
     }
   }
   return ReturnValue;
@@ -171,7 +169,7 @@ StdReturnType TimerTwo::read(TimeType& Microseconds) {
   if (STATE_RUNNING == State) {
     /* save current timer value */
     uint16_t counterValue{TCNT2};
-    byte TCNT2_tmp{TCNT2};
+    byte TCNT2_tmp{};
 
     /* wait one counter tick, needed to find out counter counting up or down */
     do {
@@ -179,11 +177,15 @@ StdReturnType TimerTwo::read(TimeType& Microseconds) {
     } while (counterValue == TCNT2_tmp);
     /* if counter counting down, add top value to current value */
     if (TCNT2_tmp < counterValue) {
-      counterValue = (OCR2A - counterValue) + OCR2A;
+      // At most 2 * 255.
+      counterValue = static_cast<uint16_t>((OCR2A - counterValue) + OCR2A);
     }
     /* transform counter value to microseconds in an efficient way */
-    Microseconds = ((counterValue * 1000uL) / (F_CPU / 1000uL))
-                   << getPrescaleShiftScale();
+    // At most 2 * 255 steps of 1024 clocks: 32640 us at 16 MHz, 65280 at 8,
+    // and TimeType has 32 bits below.
+    Microseconds =
+        static_cast<TimeType>(((counterValue * 1000uL) / (F_CPU / 1000uL))
+                              << getPrescaleShiftScale());
     return E_OK;
   }
   return E_NOT_OK;
@@ -237,7 +239,8 @@ inline byte TimerTwo::getTimerCycles(TimeType Microseconds) {
   else if ((TimerCycles >>= 2u) < TIMERTWO_RESOLUTION)
     ClockSelectBitGroup = REG_CS_PRESCALE_1024;
 
-  return TimerCycles;
+  // Below TIMERTWO_RESOLUTION for a period up to getPeriodMax().
+  return static_cast<byte>(TimerCycles);
 }
 
 ISR(TIMER2_OVF_vect) { Timer2.callTimerIsrOverflowCallback(); }
