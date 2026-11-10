@@ -1,0 +1,21 @@
+---
+# What a test does that the library must not, each the same in every test:
+# readability-magic-numbers: a test's numbers are its data, 7 or 20, which
+#   read better as the numbers they are than behind names used once.
+# cppcoreguidelines-pro-type-reinterpret-cast: a test makes chars in flash as
+#   F() of the core does, by a cast, to hand them to the library.
+# cppcoreguidelines-avoid-non-const-global-variables: a free function that a
+#   test binds reaches what it counts or changes only through a global.
+# readability-function-size.LineThreshold: a test of many cases is long but
+#   flat; its parameters, nesting and complexity keep the library's limits.
+# readability-function-cognitive-complexity.IgnoreMacros: GoogleTest's
+#   EXPECT_ and ASSERT_ expand to an if and an else each, so a test without a
+#   branch of its own counted 20; its own branches still count.
+InheritParentConfig: true
+Checks: >
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-avoid-non-const-global-variables
+CheckOptions:
+  readability-function-size.LineThreshold: none
+  readability-function-cognitive-complexity.IgnoreMacros: true

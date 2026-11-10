@@ -20,10 +20,10 @@ include(cmake/checks.cmake)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-# Recursive, as a module has a folder of its own (docs/CodingStyle.md F-12). A test is named as
-# the class it tests and Test, or a family of functions and _test (Testing.md TS-5); the mock
-# and the cases of what must not compile are no tests of their own.
-file(GLOB_RECURSE library_sources CONFIGURE_DEPENDS src/timer_two/*.cpp)
+# TimerTwo lies in src/ itself until version 2.0.0 moves it into src/timer_two/ (OIL 3). A test
+# is named as the class it tests and Test, or a family of functions and _test (Testing.md
+# TS-5); the mock and the cases of what must not compile are no tests of their own.
+file(GLOB library_sources CONFIGURE_DEPENDS src/*.cpp)
 file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS test/*Test.cpp test/*_test.cpp)
 list(FILTER test_sources EXCLUDE REGEX "/test/(mock|compile_fail)/")
 
@@ -33,9 +33,11 @@ list(FILTER test_sources EXCLUDE REGEX "/test/(mock|compile_fail)/")
 function(add_variant name)
   set(defines ${ARGN})
 
-  add_library(timer_two_${name} STATIC ${library_sources} test/mock/Arduino.cpp)
+  add_library(timer_two_${name} STATIC ${library_sources} test/mock/Arduino.cpp
+                                       test/mock/avr/io.cpp)
   target_include_directories(timer_two_${name} PUBLIC src test/mock)
-  target_compile_definitions(timer_two_${name} PUBLIC ${defines})
+  # The Uno's clock, which the board's build defines.
+  target_compile_definitions(timer_two_${name} PUBLIC F_CPU=16000000uL ${defines})
   target_compile_options(timer_two_${name} PRIVATE -std=gnu++11 ${CHECK_WARNINGS}
                                                   ${CHECK_INSTRUMENT})
   target_link_options(timer_two_${name} PUBLIC ${CHECK_INSTRUMENT})
