@@ -1,8 +1,10 @@
-﻿#include <TimerTwo.h>
+#include <TimerTwo.h>
+
+/*
 /*
  This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN11.
  The frequency of the PWM depends on the period of the timer. Furthermore the
- use of the read function is demonstrated.
+ use of the read method is demonstrated.
 */
 
 #define PIN_TOGGLE          13u
