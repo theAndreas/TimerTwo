@@ -88,5 +88,13 @@ release, built from source:
 - With the overflow interrupt on in mode 5, the sketch no longer gets through a loop of 100 ms;
   the interrupt seems to fire without end.
 
-So `start()` waits forever in simavr, and there is nothing to measure. `SIMAVR_MCU` in
-`tools/project.sh` stays empty, and this item waits for a simavr that models phase correct PWM.
+So `start()` waits forever in simavr, and there is nothing to measure. The cause in both
+releases: modes 1 and 5 are missing from the table of Timer2's modes, so TOV2 fires without end.
+
+simavr's master after 1.8 fills the table (63aa5b192, 2026-08-09), and the counter moves; but it
+counts one way only, so TOV2 comes twice as often as on the chip, and the duty on OC2B did not
+come out the same in two programs. Reported with a program that shows it in
+[simavr #442](https://github.com/buserror/simavr/issues/442#issuecomment-6779055513).
+
+`SIMAVR_MCU` in `tools/project.sh` stays empty, and this item waits for a simavr release that
+models phase correct PWM as the chip does; the template's image would then need it too.
