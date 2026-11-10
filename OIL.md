@@ -78,9 +78,15 @@ The README of 2.0.0 with the table of flash and RAM between `<!-- sizes -->` mar
 ### 5 SelfCheck in simavr
 
 `examples/SelfCheck`, which tools/self_check.sh runs in simavr: the period counted in callbacks
-and the PWM measured on pin 3. Not with the simavr of the dev container, 1.6 from Ubuntu: it
-counts Timer2 in the modes normal, CTC and fast PWM, but leaves TCNT2 at 0 in both phase correct
-modes, measured on 2026-11-10, so that `start()` waits forever. simavr 1.8 has the phase correct
-modes in its table of Timer2; whether it counts as the board does is still to be measured, and
-using it means building simavr from source in the template's image. `SIMAVR_MCU` in
-`tools/project.sh` stays empty until then.
+and the PWM measured on pin 3. Not possible with simavr as it is, measured on 2026-11-10 with the
+registers alone, without TimerTwo, in simavr 1.6 of the dev container and in 1.8, the latest
+release, built from source:
+
+- Timer2 counts in the modes normal, CTC and fast PWM, but TCNT2 stays at 0 in both phase
+  correct modes, 1 and 5, though 1.8 lists them in its table of Timer2.
+- In mode 5, OC2B never drives pin 3: low in 61 397 samples over 100 ms at a duty of 64.
+- With the overflow interrupt on in mode 5, the sketch no longer gets through a loop of 100 ms;
+  the interrupt seems to fire without end.
+
+So `start()` waits forever in simavr, and there is nothing to measure. `SIMAVR_MCU` in
+`tools/project.sh` stays empty, and this item waits for a simavr that models phase correct PWM.
