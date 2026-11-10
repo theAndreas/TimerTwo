@@ -1,10 +1,9 @@
 // Copyright 2026 Andreas Burnickl
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// TimerTwo at whatever clock F_CPU is: CMakeLists.txt builds these tests at
-// 1, 16 and 20 MHz. Each expectation is computed from F_CPU in 64 bits, apart
-// from how TimerTwo computes it. As in TimerTwoTest.cpp, each test needs a
-// process of its own.
+// Timer at whatever clock F_CPU is: CMakeLists.txt builds these tests at 1,
+// 16 and 20 MHz. Each expectation is computed from F_CPU in 64 bits, apart
+// from how Timer computes it.
 
 #include <avr/io.h>
 #include <gtest/gtest.h>
@@ -12,9 +11,12 @@
 
 #include <array>
 
-#include "StandardTypes.h"
-#include "TimerTwo.h"
+#include "test/printers.h"  // IWYU pragma: keep
+#include "timer_two/status.h"
+#include "timer_two/timer.h"
+#include "timer_two/timer2.h"
 
+namespace timer_two {
 namespace {
 
 constexpr uint64_t kClock{F_CPU};
@@ -37,39 +39,45 @@ uint64_t PeriodInClocks() { return uint64_t{2} * OCR2A * Prescaler(); }
 class ClockTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_EQ(Timer2.getState(), TimerTwo::STATE_INIT)
-        << "Each test needs a process of its own; run them through ctest.";
+    TCCR2A = 0;
+    TCCR2B = 0;
+    OCR2A = 0;
+    TCNT2.Set(0, true);
   }
+
+  Timer2& timer() { return timer_; }
+
+ private:
+  Timer2 timer_;
 };
 
 TEST_F(ClockTest, TheLongestPeriodIsTheLastThatFits) {
   uint64_t const longest{
       ((kLongestPeriodInClocks * kMicrosecondsPerSecond) - 1) / kClock};
 
-  EXPECT_EQ(Timer2.getPeriodMax(), longest);
+  EXPECT_EQ(Timer2::kPeriodMax, longest);
 }
 
 TEST_F(ClockTest, TheLongestPeriodIsTakenAndOneMoreRefused) {
-  ASSERT_EQ(Timer2.init(Timer2.getPeriodMax()), E_OK);
-  ASSERT_EQ(Timer2.start(), E_OK);
+  ASSERT_EQ(timer().Begin(Timer2::kPeriodMax), Error::kOk);
+  ASSERT_EQ(timer().Start(), Error::kOk);
   EXPECT_EQ(Prescaler(), 1024U);
 
-  EXPECT_EQ(Timer2.setPeriod(
-                static_cast<TimerTwo::TimeType>(Timer2.getPeriodMax() + 1U)),
-            E_NOT_OK);
+  EXPECT_EQ(timer().SetPeriod(static_cast<TimeType>(Timer2::kPeriodMax + 1U)),
+            Error::kPeriodOutOfRange);
 }
 
 // Each period is met to less than a step of the counter up and one down, and
 // the two clocks that dividing by 2 and by the prescaler may cut.
 TEST_F(ClockTest, EachPeriodIsMetWithinAStep) {
-  ASSERT_EQ(Timer2.init(), E_OK);
+  ASSERT_EQ(timer().Begin(), Error::kOk);
   // The prescaler is in TCCR2B while the timer runs.
-  ASSERT_EQ(Timer2.start(), E_OK);
+  ASSERT_EQ(timer().Start(), Error::kOk);
   constexpr std::array<uint32_t, 8> kPeriods{2,    3,     10,    100,
                                              1000, 10000, 20000, 26214};
 
   for (uint32_t const period : kPeriods) {
-    ASSERT_EQ(Timer2.setPeriod(static_cast<TimerTwo::TimeType>(period)), E_OK)
+    ASSERT_EQ(timer().SetPeriod(static_cast<TimeType>(period)), Error::kOk)
         << period << " us";
     uint64_t const wanted{period * kClock / kMicrosecondsPerSecond};
 
@@ -83,18 +91,21 @@ TEST_F(ClockTest, APeriodShorterThanAStepIsRefused) {
   // One step up and one down at no prescaler: two clocks.
   constexpr bool kOneMicrosecondIsAStep{2 * kMicrosecondsPerSecond <= kClock};
 
-  EXPECT_EQ(Timer2.init(1U), kOneMicrosecondIsAStep ? E_OK : E_NOT_OK);
+  EXPECT_EQ(timer().Begin(1U),
+            kOneMicrosecondIsAStep ? Error::kOk : Error::kPeriodOutOfRange);
 }
 
 TEST_F(ClockTest, ReadIsTheTimeOfTheStepsCounted) {
-  ASSERT_EQ(Timer2.init(1000U), E_OK);
-  ASSERT_EQ(Timer2.start(), E_OK);
+  ASSERT_EQ(timer().Begin(1000U), Error::kOk);
+  ASSERT_EQ(timer().Start(), Error::kOk);
   TCNT2.Set(50, true);
-  TimerTwo::TimeType microseconds{0};
 
-  ASSERT_EQ(Timer2.read(microseconds), E_OK);
+  Result<TimeType> const result{timer().Read()};
 
-  EXPECT_EQ(microseconds, 50 * Prescaler() * kMicrosecondsPerSecond / kClock);
+  ASSERT_TRUE(result.IsOk());
+  EXPECT_EQ(result.GetValue(),
+            50 * Prescaler() * kMicrosecondsPerSecond / kClock);
 }
 
 }  // namespace
+}  // namespace timer_two

@@ -10,6 +10,7 @@ uint8_t volatile TCCR2B{0};
 uint8_t volatile OCR2A{0};
 uint8_t volatile OCR2B{0};
 uint8_t volatile TIMSK2{0};
+uint8_t volatile TIFR2{0};
 MockCounter TCNT2;
 
 namespace {
@@ -21,7 +22,9 @@ constexpr uint8_t kClockSelectMask{0x07};
 
 MockCounter::operator uint8_t() {
   uint8_t const now{value_};
-  if ((TCCR2B & kClockSelectMask) != 0) {
+  ++reads_;
+  if (((TCCR2B & kClockSelectMask) != 0) && (reads_ >= reads_per_step_)) {
+    reads_ = 0;
     uint8_t const top{OCR2A};
     if (counting_up_ && value_ >= top) {
       counting_up_ = false;
@@ -44,4 +47,11 @@ MockCounter& MockCounter::operator=(uint8_t value) {
 void MockCounter::Set(uint8_t value, bool counting_up) {
   value_ = value;
   counting_up_ = counting_up;
+  reads_per_step_ = 1;
+  reads_ = 0;
+}
+
+void MockCounter::SetReadsPerStep(uint8_t reads) {
+  reads_per_step_ = reads;
+  reads_ = 0;
 }

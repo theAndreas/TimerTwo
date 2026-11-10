@@ -1,70 +1,91 @@
 # TimerTwo
-Arduino Timer2 library. This is a simple adaption of the Arduino Timer1 library. For more information see https://playground.arduino.cc/Code/Timer1/.
-Library is using the hardware timer two (Timer/Counter2) of the Arduino Uno.
 
-## API description
+A periodic interrupt, a PWM and a time readout on Timer/Counter2 of the ATmega328P, as on the
+Arduino Uno and Nano: the Timer2 counterpart of the Arduino library
+[TimerOne](https://playground.arduino.cc/Code/Timer1/).
 
-### General 
-The most functions have parameter checks and some other checks (e. g. state checks of the library) implemented. These functions have a return value of stdReturnType. You can check the return value (E_OK or E_NOT_OK) to find out if something went wrong.
+The timer runs in phase correct PWM: the period, in microseconds, sets the top and the
+prescaler; the overflow at the bottom calls a function of the sketch; and pin 3 gives a PWM
+whose frequency follows the period. This takes Timer2 from `analogWrite()` on pins 3 and 11 and
+from `tone()`.
 
-### init(Microseconds, OverflowCallback)
-You must call this method first to use any of the other methods. You can optionally specify the timer's period here (in microseconds), by default it is set to 1 millisecond. Note that this breaks analogWrite() for digital pin 3 on Arduino. You can specify also a callback function, which will be called at the specified interval in microseconds.
+```cpp
+#include <TimerTwo.h>
 
-### start()
-Starts the timer. Note init() has to be called first.
-
-### stop()
-Stops the timer by removing the timer clock.
-
-### setPeriod(Microseconds)
-Sets the period in microseconds. The minimum period or highest frequency this library supports is 1 microsecond or 1 MHz. The maximum period is 32767 microseconds (can be retrieved by getPeriodMax()) or about 0.032767 seconds. Note that setting the period will change the attached interrupt and the PWM output frequency and duty cycle simultaneously.
-
-### enablePwm(PwmPin, DutyCycle)
-Generates a PWM waveform on the specified pin. Output pins for Timer2 are PORTB pin 3 and PORTD pin 3. On Arduino, these are digital pins 11 and 3. But the library supports PWM only for pin 3 (PWM_PIN_3). Because in Timer Mode 5 (PWM, Phase Correct) the register OCRA is used to save the top value of the timer. The duty cycle is specified as a 8 bit value, so anything between 0 and 255.
-
-### attachInterrupt(OverflowCallback)
-Calls a function at the specified interval in microseconds. Take care about the exution time of the code in the interrupt, or the CPU may never enter the main loop and your program will 'lock up'.
-
-### setPwmDuty(PwmPin, DutyCycle)
-A fast shortcut for setting the PWM duty for a given pin if you have already set it up by calling enablePwm() earlier. This avoids the overhead of enabling PWM mode for the pin, setting the data direction register, checking for optional period adjustments etc. that are mandatory when you call enablePwm().
-
-### detachInterrupt()
-Disables the attached interrupt.
-
-### disablePwm(PwmPin)
-Turns PWM off for the specified pin so you can use that pin for something else.
-
-### read(Microseconds)
-Reads the time since last rollover in microseconds. The resolution of the time is only as high as the resolution of the timer. Means F_CPU / prescaler of the timer. The prescaler is calculated by setting the period of the timer. The accuracy of the result also depends on calculation. This is only performed as an integer division, therefore deviations can still occur due to truncation.
-
-## Usage
-```c++
-/*
- This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN3.
- The frequency depends on the period of the timer.
-*/
-
-#define PIN_TOGGLE          13u
-
-void timerCallback() {
-    digitalWrite(PIN_TOGGLE, !digitalRead(PIN_TOGGLE));
-};
+void OnTick() {
+  // every millisecond, in the interrupt: keep it short
+}
 
 void setup() {
-  pinMode(PIN_TOGGLE, OUTPUT);
-  // Initialize timer with a period of 1000 microseconds.
-  Timer2.init(1000u, timerCallback);
-  Timer2.start();
-  Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127);
+  timer_two::Discard(timer_two::timer2.Begin(1000, OnTick));
+  timer_two::Discard(timer_two::timer2.EnablePwm(128));  // half of the period high
+  timer_two::Discard(timer_two::timer2.Start());
 }
 
-void loop() {
-
-}
+void loop() {}
 ```
 
-This is [examples/Basics](examples/Basics/Basics.ino). For a more advanced usage see also
-[examples/Read](examples/Read/Read.ino).
+This is [examples/Basics](examples/Basics/Basics.ino). [examples/Read](examples/Read/Read.ino)
+checks each call and reads the time.
+
+## API
+
+Everything lies in the namespace `timer_two`; `timer2` is the timer. A call that can refuse
+returns a `Status`, and changes nothing when it refuses: `IsOk()` says whether it did what it
+was asked, `GetError()` why not, and `GetErrorText()` the same in a few words for
+`Serial.print()`. A `Status` must not be dropped: where a sketch does not care, `Discard()` says
+so. `Read()` returns a `Result`, the time or why there is none.
+
+| Call | What it does | Refuses with |
+|---|---|---|
+| `Begin(period, callback)` | Sets the timer up with a period in microseconds, 1000 if none is given, and a function the overflow calls, or none. It does not count yet. | `kBegunAlready`, `kPeriodOutOfRange` |
+| `SetPeriod(period)` | Sets the period of the interrupt and of the PWM, up to `Timer2::kPeriodMax`, 32767 at 16 MHz; at least one step of the counter, 1 from 2 MHz on. The duty keeps its share. | `kNotBegun`, `kPeriodOutOfRange` |
+| `Start()` | Starts the counter at 0, and the interrupt if there is a callback. | `kNotBegun`, `kRunning` |
+| `Stop()` | Stops the counter where it is. | `kNotRunning` |
+| `Resume()` | Lets the counter go on from where `Stop()` stopped it. | `kNotStopped` |
+| `AttachInterrupt(callback)` | Sets the function the overflow calls. | `kNoCallback` |
+| `DetachInterrupt()` | Disables the interrupt and forgets the function. | – |
+| `EnablePwm(duty)` | Starts the PWM on pin 3: 0 is always low, 255 always high. | `kNotBegun` |
+| `SetPwmDuty(duty)` | Sets the duty. | `kNotBegun` |
+| `DisablePwm()` | Stops the PWM; pin 3 is a plain output again. | – |
+| `Read()` | The time since the counter was last at its bottom, in microseconds. | `kNotRunning` |
+| `GetState()` | `kNotBegun`, `kIdle`, `kRunning` or `kStopped`. | – |
+
+The callback runs in the interrupt: it should do little, as setting a flag that `loop()` reads,
+and what it shares with `loop()` is `volatile`. Below 8 MHz the times are `uint32_t`, as the
+longest period does not fit 16 bits; from 8 MHz they are `uint16_t`. Both are `TimeType`.
+
+## From version 1
+
+Version 2.0.0 breaks every name, on purpose: a sketch of version 1 does not compile until it is
+changed, rather than behaving otherwise without notice. There are no aliases for the old names.
+
+| Version 1 | Version 2.0.0 |
+|---|---|
+| `Timer2.init(us, f)` | `timer_two::timer2.Begin(us, f)` |
+| `Timer2.start()`, `stop()`, `resume()` | `Start()`, `Stop()`, `Resume()` |
+| `Timer2.setPeriod(us)` | `SetPeriod(us)` |
+| `Timer2.enablePwm(TimerTwo::PWM_PIN_3, duty)` | `EnablePwm(duty)`: there is only pin 3 |
+| `Timer2.setPwmDuty(TimerTwo::PWM_PIN_3, duty)` | `SetPwmDuty(duty)` |
+| `Timer2.disablePwm(TimerTwo::PWM_PIN_3)` | `DisablePwm()` |
+| `Timer2.attachInterrupt(f)`, `detachInterrupt()` | `AttachInterrupt(f)`, `DetachInterrupt()` |
+| `Timer2.read(us)` | `Read()`, which returns the time in a `Result` |
+| `Timer2.getPeriodMax()` | `timer_two::Timer2::kPeriodMax` |
+| `Timer2.getState()`, `TimerTwo::STATE_INIT` ... | `GetState()`, `timer_two::State::kNotBegun` ... |
+| `StdReturnType`, `E_OK`, `E_NOT_OK` | `timer_two::Status`, `IsOk()`, `timer_two::Error` |
+| `TimerTwo::TimeType` | `timer_two::TimeType` |
+| `StandardTypes.h` | gone |
+
+What also changed:
+
+- The duty is a share of 255, not of 256: 255 keeps the output high, as 0 keeps it low.
+- `SetPeriod()` and `SetPwmDuty()` are refused before `Begin()`, and `Stop()` returns why it
+  did nothing.
+- The first callback comes after a period, not at once: the flag of an overflow, which the
+  core's `init()` leaves set, is cleared before the interrupt is enabled.
+- The bugs of version 1 are fixed, among them `resume()`, which left the timer marked stopped,
+  and the time `read()` returned, which lost its lower steps: item 2 of
+  [OIL.md](https://github.com/theAndreas/TimerTwo/blob/main/OIL.md) lists them.
 
 ## Development
 

@@ -105,16 +105,16 @@ and sets the period with the prescaler, the overflow at the bottom calls the ske
 and OC2B on pin 3 gives the PWM. `OIL.md` is the open issue list: what is planned, in which order,
 and why. A pull request that works on an item sets its status and links itself in the same PR.
 
-- **The code is of 2023, until version 2.0.0** (OIL 3): one singleton class `TimerTwo` and
-  `Timer2`, `StdReturnType` from `src/StandardTypes.h`, constants as `#define`. `src/.clang-tidy`
-  and `examples/.clang-tidy` turn off the groups it fails until then; new code, the tests and the
-  mock, keeps every check.
-- **The tests need a process each**: `init()` takes the singleton once, and no test can begin
-  from a new one. ctest runs each test on its own, as `gtest_discover_tests()` adds them; the
-  fixture fails in `SetUp()` otherwise.
-- **The mock of the registers**, `test/mock/avr/io.h`: TCNT2 steps on each read while a clock is
-  selected, up to OCR2A and down again, so that `start()` and `read()`, which wait for the counter
-  to move, end on the host.
+- **The hardware is a parameter** (CodingStyle H-3): `timer_two::Timer<Registers>` in
+  `src/timer_two/timer.h` drives any 8-bit Timer/Counter whose registers `Registers` returns;
+  `src/timer_two/timer2.h` hands in Timer/Counter2 as `Timer2Registers`, and `timer2.cpp` defines
+  the one object a sketch uses, `timer2`, made when compiling, and the overflow interrupt that
+  calls it. A test makes a `Timer2` of its own, on the mock's registers set back in `SetUp()`.
+- **Errors** are `timer_two::Error` in a `Status`, or a `Result` for `Read()`, as MaxMatrix has
+  them: no conversion to `bool`, the texts in flash.
+- **The mock of the registers**, `test/mock/avr/io.h`: TCNT2 steps up to OCR2A and down again
+  while a clock is selected, on each read or on every n-th, so that `Start()` and `Read()`, which
+  wait for the counter to move, end on the host.
 - **The clocks**: `CMakeLists.txt` builds `test/ClockTest.cpp` at 1 and 20 MHz besides the
   Uno's 16, as the code computes with quotients of `F_CPU`; its expectations are computed from
   `F_CPU`, so that they hold at any clock.

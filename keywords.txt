@@ -6,26 +6,41 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-TimerTwo                       KEYWORD1
+timer_two	KEYWORD1
+timer2	KEYWORD1
+Timer2	KEYWORD1
+Timer	KEYWORD1
+Status	KEYWORD1
+Result	KEYWORD1
+Error	KEYWORD1
+State	KEYWORD1
+TimeType	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-init                           KEYWORD2
-start                          KEYWORD2
-stop                           KEYWORD2
-resume                         KEYWORD2
-read                           KEYWORD2
-enablePwm                      KEYWORD2
-disablePwm                     KEYWORD2
-attachInterrupt                KEYWORD2
-detachInterrupt                KEYWORD2
-setPeriod                      KEYWORD2
-setPwmDuty                     KEYWORD2
+Begin	KEYWORD2
+SetPeriod	KEYWORD2
+Start	KEYWORD2
+Stop	KEYWORD2
+Resume	KEYWORD2
+AttachInterrupt	KEYWORD2
+DetachInterrupt	KEYWORD2
+EnablePwm	KEYWORD2
+SetPwmDuty	KEYWORD2
+DisablePwm	KEYWORD2
+Read	KEYWORD2
+GetState	KEYWORD2
+IsOk	KEYWORD2
+GetError	KEYWORD2
+GetErrorText	KEYWORD2
+GetValue	KEYWORD2
+Discard	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
-
+kPeriodMax	LITERAL1
+kDefaultPeriod	LITERAL1
