@@ -1,8 +1,7 @@
 #include <TimerTwo.h>
 
 /*
-/*
- This example toggles the PIN13 cyclically all 1ms and starts the PWM for PIN11.
+ This example toggles PIN13 at the longest period of the timer and starts the PWM for PIN3.
  The frequency of the PWM depends on the period of the timer. Furthermore the
  use of the read method is demonstrated.
 */
@@ -15,12 +14,13 @@ void timerCallback() {
 }
 
 void setup() {
+    Serial.begin(115200);
     pinMode(PIN_TOGGLE, OUTPUT);
     if(Timer2.init(Timer2.getPeriodMax(), timerCallback) == E_NOT_OK) {
 	    // Something went wrong, check your parameters
         while(1);
     }
-    if(Timer2.enablePwm(TimerTwo::PWM_PIN_11, 127) == E_NOT_OK) {
+    if(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 127) == E_NOT_OK) {
         // Something went wrong, has init function already been called?
         while(1);
     }
