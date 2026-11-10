@@ -1,0 +1,38 @@
+# arduino-cli for a CI job, at the dev container's version, and the core tools/project.sh pins,
+# with what its prepare() builds beyond it.
+#
+# The version is read from the ARG ARDUINO_CLI_VERSION line of .devcontainer/Dockerfile, as
+# uv-sync reads uv's, so there is one place that says which arduino-cli. The core, its toolchain
+# among it, is kept between runs, keyed by tools/project.sh, which names it: a run whose core
+# has not changed fetches nothing.
+name: Set up arduino-cli
+description: arduino-cli at the dev container's version, and the pinned core through make setup
+
+runs:
+  using: composite
+  steps:
+    - name: Read the version
+      id: version
+      shell: bash
+      run: |
+        version=$(sed -n 's/^ARG ARDUINO_CLI_VERSION=//p' .devcontainer/Dockerfile)
+        if [ -z "$version" ]; then
+          echo "::error::.devcontainer/Dockerfile names no ARG ARDUINO_CLI_VERSION"
+          exit 1
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - uses: arduino/setup-arduino-cli@v2
+      with:
+        version: ${{ steps.version.outputs.version }}
+
+    - name: Cache the core
+      uses: actions/cache@v6
+      with:
+        path: ~/.arduino15
+        key: arduino-${{ runner.os }}-${{ hashFiles('tools/project.sh') }}
+        restore-keys: arduino-${{ runner.os }}-
+
+    - name: Install the core
+      shell: bash
+      run: make setup

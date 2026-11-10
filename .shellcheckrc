@@ -1,0 +1,8 @@
+# The checks shellcheck makes beyond its defaults, in tools/lint.sh and in an editor alike. This
+# file comes from the template and is brought up to date with `copier update`.
+#
+# check-extra-masked-returns (SC2312): the status of a command whose output another one reads,
+# as in `mapfile -t files < <(git ls-files ...)` or `diff "$(expected_of ...)" ...`, is lost, and
+# set -e never sees it fail. A git or a find that failed left an empty list, and the check over
+# it passed. Such output goes into a variable first, whose assignment fails with the command.
+enable=check-extra-masked-returns

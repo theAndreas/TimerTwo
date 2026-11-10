@@ -1,0 +1,11 @@
+---
+BasedOnStyle: Google
+# const right of what it qualifies: char const*, Status const&. Google
+# encourages const first but does not require it, and asks to be consistent with the code
+# around; this is the one place the library departs from its preference. volatile moves
+# with it. clang-format --dry-run in tools/lint.sh fails on a const on the left.
+QualifierAlignment: Right
+# A test of RingBuffer.h is RingBufferTest.cpp (docs/Testing.md TS-5), and includes the header
+# it tests first, as a source does its own. Google's regex knows only the endings _test and
+# _unittest; Test is added to them.
+IncludeIsMainRegex: '(Test|[-_](test|unittest))?$'

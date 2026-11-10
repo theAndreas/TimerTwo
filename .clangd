@@ -1,0 +1,45 @@
+# Which compilation database clangd reads, by path. src/ and test/ come from
+# CMake, against the mock of the core (cmake --preset default writes it);
+# examples/ from tools/tidy.sh --database-only, with the flags the board is
+# compiled with, as only that one has the sketches, an .ino as C++ with
+# Arduino.h included first. Both add the warnings that .clang-tidy passes as
+# ExtraArgs, the checks of the Doxygen blocks among them, as clangd does not
+# read ExtraArgs.
+CompileFlags:
+  CompilationDatabase: build/host
+  Add: [-Wcast-qual, -Wcomma, -Wconditional-uninitialized, -Wdeprecated,
+        -Wno-deprecated-redundant-constexpr-static-def, -Wdouble-promotion,
+        -Wextra-semi, -Wformat=2, -Wimplicit-fallthrough, -Wloop-analysis,
+        -Wmissing-noreturn, -Wnon-virtual-dtor, -Wnull-dereference,
+        -Wold-style-cast, -Wshadow-all, -Wundef, -Wunreachable-code-aggressive,
+        -Wunused-exception-parameter, -Wunused-macros, -Wunused-member-function,
+        -Wunused-template, -Wzero-as-null-pointer-constant,
+        -Wdocumentation, -Wdocumentation-unknown-command,
+        -fcomment-block-commands=stddiff]
+---
+If:
+  PathMatch: examples/.*
+CompileFlags:
+  CompilationDatabase: build/tidy/default
+  Add: [-Wcast-qual, -Wcomma, -Wconditional-uninitialized, -Wdeprecated,
+        -Wno-deprecated-redundant-constexpr-static-def, -Wdouble-promotion,
+        -Wextra-semi, -Wformat=2, -Wimplicit-fallthrough, -Wloop-analysis,
+        -Wmissing-noreturn, -Wnon-virtual-dtor, -Wnull-dereference,
+        -Wold-style-cast, -Wshadow-all, -Wundef, -Wunreachable-code-aggressive,
+        -Wunused-exception-parameter, -Wunused-macros, -Wunused-member-function,
+        -Wunused-template, -Wzero-as-null-pointer-constant,
+        -Wdocumentation, -Wdocumentation-unknown-command,
+        -fcomment-block-commands=stddiff]
+---
+# The clang-tidy module of our own, against the headers of LLVM the dev container keeps for it
+# (tools/lib/tidy_module.sh); the major version follows ARG LLVM_MAJOR of .devcontainer/Dockerfile.
+# It is written to LLVM's API, not to the library's rules, so the checks of .clang-tidy are
+# not applied to it.
+If:
+  PathMatch: tools/lib/tidy_module/.*
+CompileFlags:
+  CompilationDatabase: None
+  Add: [-xc++, -std=c++17, -isystem/opt/llvm-23/include]
+Diagnostics:
+  ClangTidy:
+    Remove: ['*']

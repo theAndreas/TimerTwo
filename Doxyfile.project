@@ -1,0 +1,7 @@
+# The project's own settings of the reference, which Doxyfile includes at its end: Doxyfile is
+# the template's and `copier update` brings it up to date, this file is the project's and the
+# update leaves it alone. += adds to a list of Doxyfile, = replaces a setting:
+#
+#   INPUT                  += docs/Wiring.md
+#   IMAGE_PATH             = docs
+#   PREDEFINED             += PREFIX_CHECK_ACCESS=1

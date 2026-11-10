@@ -1,0 +1,10 @@
+---
+# readability-magic-numbers: a sketch's pins, baud rate and test values read
+# better as the numbers they are than behind names used once.
+# cppcoreguidelines-avoid-non-const-global-variables: a sketch shares its
+# state between setup(), loop() and its interrupts through globals; the
+# Arduino core gives it no other place.
+InheritParentConfig: true
+Checks: >
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables

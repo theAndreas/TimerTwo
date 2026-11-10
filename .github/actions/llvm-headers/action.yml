@@ -1,0 +1,44 @@
+# The headers of LLVM, clang and clang-tidy for a CI job that runs tools/tidy.sh: the checks of
+# our own, house-*, are a module that tools/lib/tidy_module.sh compiles against them.
+#
+# The major version is ARG LLVM_MAJOR of .devcontainer/Dockerfile, read from there as uv-sync
+# reads uv's, so that the dev container and CI have the same; .devcontainer/llvm-headers.sh
+# fetches them, the script the Dockerfile runs. They are kept between runs, keyed by the major
+# version alone: within one, LLVM keeps its ABI, and a newer patch release changes nothing a
+# module sees. After this action LLVM_INCLUDE_DIR names the folder.
+name: LLVM headers
+description: The headers of LLVM, clang and clang-tidy at the dev container's major version
+
+inputs:
+  root:
+    description: The folder that holds .devcontainer, the repository's if not given
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - name: Read the major version
+      id: version
+      shell: bash
+      run: |
+        major=$(sed -n 's/^ARG LLVM_MAJOR=//p' "${{ inputs.root }}/.devcontainer/Dockerfile")
+        if [ -z "$major" ]; then
+          echo "::error::${{ inputs.root }}/.devcontainer/Dockerfile names no ARG LLVM_MAJOR"
+          exit 1
+        fi
+        echo "major=$major" >> "$GITHUB_OUTPUT"
+        echo "LLVM_INCLUDE_DIR=$RUNNER_TEMP/llvm-$major/include" >> "$GITHUB_ENV"
+
+    - name: Restore the headers
+      id: cache
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/llvm-${{ steps.version.outputs.major }}/include
+        key: llvm-headers-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.major }}
+
+    - name: Fetch the headers
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        "${{ inputs.root }}/.devcontainer/llvm-headers.sh" "${{ steps.version.outputs.major }}" \
+          "$LLVM_INCLUDE_DIR"

@@ -1,0 +1,18 @@
+# The answers this project was made from, which `copier update` reads. Change one with
+# `copier update --data name=value`, not here.
+_commit: v0.5.0
+_src_path: gh:theAndreas/embedded-cpp-template
+arduino_core: arduino:avr@1.8.8
+author: Andreas Burnickl
+copyright_year: 2026
+description: Periodic interrupt, PWM and time readout on Timer2 of the ATmega328P.
+fqbn: arduino:avr:uno
+github_owner: theAndreas
+license: GPL-3.0-or-later
+macro_prefix: TIMERTWO
+namespace: timer_two
+project_name: TimerTwo
+simavr_frequency: 16000000
+simavr_mcu: atmega328p
+skeleton: false
+url: https://github.com/theAndreas/TimerTwo

@@ -1,0 +1,47 @@
+# The reference on GitHub Pages, from the Doxygen blocks of src/ and the README as its main
+# page. Only what differs from Doxygen's defaults is set. Built and checked by tools/docs.sh,
+# which fails on a warning, see there which; published by .github/workflows/docs.yml. How a
+# block is written is in docs/Documentation.md.
+
+PROJECT_NAME           = TimerTwo
+PROJECT_BRIEF          = "Periodic interrupt, PWM and time readout on Timer2 of the ATmega328P."
+OUTPUT_DIRECTORY       = build/docs
+
+# The examples are not read: they are sketches, not reference, and the README links them. The
+# style guide and the dev container's README are pages, as the README links them too.
+INPUT                  = README.md docs/Documentation.md .devcontainer/README.md src
+RECURSIVE              = YES
+FILE_PATTERNS          = *.h *.md
+USE_MDFILE_AS_MAINPAGE = README.md
+# So that the README's links to its own headings, written for GitHub, find them here as well.
+MARKDOWN_ID_STYLE      = GITHUB
+
+# \stddiff opens the paragraph that says where an entity differs from the standard it follows,
+# so that every such difference reads alike. clang knows it from -fcomment-block-commands in
+# .clang-tidy and .clangd, or -Wdocumentation-unknown-command would take it for a typo.
+ALIASES                = "stddiff=\par Differs from the standard:^^"
+
+# PROGMEM and the attributes mean nothing to Doxygen; read as they are, a name in flash would
+# be a symbol "not declared". A switch of the library is left to its header, so that it is in
+# the reference with its default.
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = PROGMEM= "__attribute__(x)="
+
+# A class shows the members it takes from a base in the namespace internal on its own page.
+INLINE_INHERITED_MEMB  = YES
+
+# No graphs: they need Graphviz, and the parts are few enough to read from the README.
+HAVE_DOT               = NO
+DIRECTORY_GRAPH        = NO
+GENERATE_LATEX         = NO
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_INCOMPLETE_DOC = YES
+WARN_NO_PARAMDOC       = YES
+WARN_LOGFILE           = build/docs/warnings.log
+
+# The project's own settings, last, so that += adds to the lists above and a plain = replaces
+# one: Doxyfile.project, which the template writes once and `copier update` leaves alone.
+@INCLUDE               = Doxyfile.project

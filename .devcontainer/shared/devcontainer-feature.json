@@ -1,0 +1,94 @@
+{
+    "id": "shared",
+    "version": "1.0.0",
+    "name": "TimerTwo shared editor configuration",
+    "description": "Extensions, the Arduino core, the CMake build of the tests and the volumes for the Arduino data directory, uv's cache and logins shared by every devcontainer.json variant.",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cpptools",
+                "eamodio.gitlens",
+                "cschlosser.doxdocgen",
+                "openai.chatgpt",
+                "anthropic.claude-code"
+            ],
+            // clangd for IntelliSense, with the databases .clangd names; cpptools only
+            // for debugging, its IntelliSense off so that the two do not answer twice.
+            // doxdocgen writes the skeleton of a Doxygen block, see the settings below.
+            // No header insertion: a sketch includes <TimerTwo.h> first, and an
+            // include put in by the editor would not know that. An .ino is C++.
+            "settings": {
+                "C_Cpp.intelliSenseEngine": "disabled",
+                "clangd.path": "/usr/local/bin/clangd",
+                "clangd.arguments": ["--header-insertion=never"],
+                "files.associations": { "*.ino": "cpp" },
+                // The skeleton of a Doxygen block in the style of docs/Documentation.md:
+                // /*! and Enter above a declaration.
+                "doxdocgen.c.triggerSequence": "/*!",
+                "doxdocgen.c.firstLine": "/*!",
+                "doxdocgen.c.commentPrefix": " * ",
+                "doxdocgen.c.lastLine": " */",
+                "doxdocgen.generic.briefTemplate": "\\brief {text}",
+                "doxdocgen.generic.paramTemplate": "\\param[in] {param} ",
+                "doxdocgen.cpp.tparamTemplate": "\\tparam {param} ",
+                "doxdocgen.generic.returnTemplate": "\\return ",
+                "doxdocgen.generic.includeTypeAtReturn": false,
+                "doxdocgen.generic.order": ["brief", "empty", "tparam", "param", "return"]
+            }
+        }
+    },
+    // uv's cache is a volume of its own, another file system than the workspace's .venv, so it
+    // copies rather than failing to link and saying so on every sync.
+    "containerEnv": {
+        "GH_HOST": "github.com",
+        "UV_LINK_MODE": "copy",
+        // Claude Code keeps .claude.json beside ~/.claude rather than in it; this puts both
+        // into the volume below, so that a rebuild keeps the login and the settings.
+        "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+        // The shell history in the volume below, written after every command rather than
+        // when the shell exits, as a terminal that a rebuild closes never exits cleanly.
+        // ~/.bashrc appends its own hook to PROMPT_COMMAND, so this one stays.
+        "HISTFILE": "/home/vscode/.commandhistory/.bash_history",
+        "PROMPT_COMMAND": "history -a"
+    },
+    // The Python tools of uv.lock, the core of tools/project.sh, pinned as in CI, and what
+    // prepare() there builds; then the compilation databases clangd reads, see .clangd.
+    "postCreateCommand": "uv sync --frozen && make setup && cmake --preset default && tools/tidy.sh --database-only && arduino-cli version && arduino-lint --version && gh --version && uv --version && clangd --version && command -v simavr && doxygen --version && cppcheck --version && clang++ --version",
+    // git signs in to GitHub through gh, whose login is in the volume below, rather than
+    // through VS Code's helper, which opens a window on the host. On every attach, after VS Code
+    // has copied the host's .gitconfig in; nothing without a login.
+    "postAttachCommand": "gh auth status --hostname github.com >/dev/null 2>&1 && gh auth setup-git --hostname github.com || true",
+    "mounts": [
+        {
+            "source": "timer_two-arduino15",
+            "target": "/home/vscode/.arduino15",
+            "type": "volume"
+        },
+        {
+            "source": "timer_two-uv-cache",
+            "target": "/home/vscode/.cache/uv",
+            "type": "volume"
+        },
+        {
+            "source": "timer_two-codex",
+            "target": "/home/vscode/.codex",
+            "type": "volume"
+        },
+        {
+            "source": "timer_two-claude",
+            "target": "/home/vscode/.claude",
+            "type": "volume"
+        },
+        {
+            "source": "timer_two-gh",
+            "target": "/home/vscode/.config/gh",
+            "type": "volume"
+        },
+        {
+            "source": "timer_two-history",
+            "target": "/home/vscode/.commandhistory",
+            "type": "volume"
+        }
+    ]
+}

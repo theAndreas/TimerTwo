@@ -1,0 +1,188 @@
+# Broad groups, and out of them what contradicts the Google style, what cannot be had on the
+# AVR, and the aliases of checks that are on already. Each exception says why. This file comes
+# from the template and is brought up to date with `copier update`; a project adds its own
+# exceptions at the end of a list, with its reason, and the update keeps them.
+Checks: >
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  google-*,
+  house-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-dynamic-static-initializers,
+  -cert-dcl37-c,
+  -cert-dcl51-cpp,
+  -cert-dcl58-cpp,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-c-copy-assignment-signature,
+  -cppcoreguidelines-explicit-constructor,
+  -cppcoreguidelines-explicit-virtual-functions,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-missing-std-forward,
+  -cppcoreguidelines-narrowing-conversions,
+  -cppcoreguidelines-noexcept-destructor,
+  -cppcoreguidelines-noexcept-move-operations,
+  -cppcoreguidelines-noexcept-swap,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-rvalue-reference-param-not-moved,
+  -cppcoreguidelines-use-default-member-init,
+  -google-explicit-constructor,
+  -misc-explicit-constructor,
+  -modernize-deprecated-headers,
+  -modernize-return-braced-init-list,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-named-parameter
+# house-*: the checks of our own, in tools/lib/tidy_module/; tools/tidy.sh loads them. Without
+#   the module, as in clangd, the name matches nothing.
+# bugprone-dynamic-static-initializers: it reports the extern declaration of a constant whose
+#   constexpr definition lies in a .cpp it cannot see, as an object identified by its address
+#   has to be.
+# cert-dcl37-c, cert-dcl51-cpp, cert-dcl58-cpp: aliases of bugprone-reserved-identifier and
+#   bugprone-std-namespace-modification, which are on; two names would want two NOLINTs.
+# cppcoreguidelines-avoid-c-arrays, -avoid-magic-numbers, -c-copy-assignment-signature,
+#   -explicit-virtual-functions, -macro-to-enum, -narrowing-conversions, -noexcept-destructor,
+#   -noexcept-move-operations, -noexcept-swap, -non-private-member-variables-in-classes,
+#   -use-default-member-init: aliases of the modernize-, readability-, misc-, bugprone- and
+#   performance- checks that are on, with defaults of their own; the options below are set for
+#   those.
+# cppcoreguidelines-explicit-constructor, google-explicit-constructor,
+#   misc-explicit-constructor: cpplint checks the same rule as runtime/explicit, and the
+#   implicit constructors that are meant carry their NOLINT there; two tools would want two
+#   per line.
+# cppcoreguidelines-missing-std-forward, -rvalue-reference-param-not-moved: they want
+#   std::forward and std::move, which avr-gcc does not have without a standard library; a
+#   static_cast<T&&> is what both are, and the checks do not know it.
+# cppcoreguidelines-pro-bounds-array-to-pointer-decay, -pro-bounds-avoid-unchecked-container-
+#   access, -pro-bounds-constant-array-index: the bounds profile wants gsl::span and gsl::at,
+#   which the AVR does not have; F(), PROGMEM tables and the core take arrays as pointers, and
+#   operator[] is the unchecked access the standard gives. cppcoreguidelines-pro-bounds-
+#   pointer-arithmetic stays on: a project built on pointers, as a container, turns it off
+#   below, with its reason.
+# modernize-deprecated-headers: avr-gcc comes without a C++ standard library, so there is no
+#   <cstdint>, only <stdint.h>.
+# modernize-return-braced-init-list: `return Error();` says what is returned, `return {};`
+#   hides it.
+# modernize-use-trailing-return-type: Google puts the return type in front.
+# readability-identifier-length: Google allows `f` or `a` and `b` where the scope is a few
+#   lines.
+# readability-named-parameter: Google leaves out the name of a parameter that is unused where
+#   the context explains it, as a tag type that only picks an overload.
+WarningsAsErrors: '*'
+# clang's warnings beyond -Wall -Wextra, which tools/tidy.sh passes: what an IDE such as CLion
+# finds with its own analysis of the code, reported here by clang-tidy as clang-diagnostic-*
+# and failing as any check does. Code that cannot be reached, a macro or a member function
+# that is never used, an #if on a macro that is not defined (a switch spelled wrong is off
+# without a word), a C cast, 0 as a null pointer, a shadowed name, a float promoted to double
+# (which the AVR computes in software). Not -Wdeprecated-redundant-constexpr-static-def: a
+# library for gnu++11 needs the definition of a constexpr static member outside its class, which
+# C++17, as the tests are compiled, calls redundant.
+#
+# And the Doxygen blocks, checked against the declaration they stand at: a \param whose name
+# the function does not have, a \return on a function that returns nothing, an unknown
+# command. \stddiff is the alias of the Doxyfile. See docs/Documentation.md.
+#
+# .clangd adds the same, so that the editor shows them.
+ExtraArgs:
+  - -Wcast-qual
+  - -Wcomma
+  - -Wconditional-uninitialized
+  - -Wdeprecated
+  - -Wno-deprecated-redundant-constexpr-static-def
+  - -Wdouble-promotion
+  - -Wextra-semi
+  - -Wformat=2
+  - -Wimplicit-fallthrough
+  - -Wloop-analysis
+  - -Wmissing-noreturn
+  - -Wnon-virtual-dtor
+  - -Wnull-dereference
+  - -Wold-style-cast
+  - -Wshadow-all
+  - -Wundef
+  - -Wunreachable-code-aggressive
+  - -Wunused-exception-parameter
+  - -Wunused-macros
+  - -Wunused-member-function
+  - -Wunused-template
+  - -Wzero-as-null-pointer-constant
+  - -Wdocumentation
+  - -Wdocumentation-unknown-command
+  - -fcomment-block-commands=stddiff
+# (^|/), as tools/tidy.sh names the files relative to the repository, and a
+# header beside an example is found as examples/.../font_error.h.
+HeaderFilterRegex: '(^|/)(src|examples)/'
+CheckOptions:
+  # The size of a function, docs/CodingStyle.md FN-2 to FN-5: 40 lines of body,
+  # 4 parameters, 3 levels within the body (the body itself is level 1 to the
+  # check), a cognitive complexity of 15. Without a threshold the check
+  # reports nothing.
+  readability-function-size.LineThreshold: 40
+  readability-function-size.ParameterThreshold: 4
+  readability-function-size.NestingThreshold: 4
+  readability-function-cognitive-complexity.Threshold: 15
+  # A text in PROGMEM is a char array, as F() and a table of texts need one.
+  modernize-avoid-c-arrays.AllowStringArrays: true
+  # A list over several lines ends in a comma, unless it is one value whose
+  # expression wraps, as in Result<...> const end{ReadDigits(...)}: there a
+  # comma would read as the start of a second value.
+  readability-trailing-comma.MultiLineCommaPolicy: Ignore
+  # A struct with only public members is what Google calls a struct, and an
+  # array type has to be one to stay an aggregate.
+  misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
+  # The do { ... } while (0) of a macro is how a macro becomes one statement.
+  cppcoreguidelines-avoid-do-while.IgnoreMacros: true
+  # A class that deletes its copy has no move either, as the language has it;
+  # the rule of five does not ask to say so twice.
+  cppcoreguidelines-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted: true
+  # Google's "include what you use", with Arduino.h as what provides the
+  # core and the board's pins: F(), __FlashStringHelper and A0 come through it,
+  # from the core's folder and from the variant's.
+  misc-include-cleaner.IgnoreHeaders: '.*/cores/arduino/.*;.*/variants/.*'
+  # Google's names, which readability-identifier-naming checks only once it is told them; the
+  # same block in every project, so that every project names alike. Two exceptions Google
+  # makes itself are general: an accessor is named like the variable it gives (group(),
+  # size()), as are the aliases of a type that mimics the standard (value_type); and an include
+  # guard ends in an underscore. The third, an entity that mimics one of the standard library
+  # and takes its names (array, span, make_array), is the project's: it lists them below, as
+  # ClassIgnoredRegexp, StructIgnoredRegexp, FunctionIgnoredRegexp and
+  # ConstexprVariableIgnoredRegexp.
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.UnionCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TypeAliasIgnoredRegexp: '^[a-z][a-z0-9_]*$'
+  readability-identifier-naming.TypedefCase: CamelCase
+  readability-identifier-naming.TypedefIgnoredRegexp: '^[a-z][a-z0-9_]*$'
+  readability-identifier-naming.TemplateParameterCase: CamelCase
+  readability-identifier-naming.FunctionCase: CamelCase
+  readability-identifier-naming.MethodCase: CamelCase
+  readability-identifier-naming.MethodIgnoredRegexp: '^[a-z][a-z0-9_]*$'
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ParameterCase: lower_case
+  readability-identifier-naming.MemberCase: lower_case
+  readability-identifier-naming.PrivateMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberSuffix: _
+  readability-identifier-naming.ProtectedMemberCase: lower_case
+  readability-identifier-naming.ProtectedMemberSuffix: _
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.ConstexprVariablePrefix: k
+  readability-identifier-naming.GlobalConstantCase: CamelCase
+  readability-identifier-naming.GlobalConstantPrefix: k
+  readability-identifier-naming.StaticConstantCase: CamelCase
+  readability-identifier-naming.StaticConstantPrefix: k
+  readability-identifier-naming.EnumConstantCase: CamelCase
+  readability-identifier-naming.EnumConstantPrefix: k
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+  readability-identifier-naming.MacroDefinitionIgnoredRegexp: '^[A-Z][A-Z0-9_]*_$'
