@@ -20,10 +20,10 @@ include(cmake/checks.cmake)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-# TimerTwo lies in src/ itself until version 2.0.0 moves it into src/timer_two/ (OIL 3). A test
-# is named as the class it tests and Test, or a family of functions and _test (Testing.md
-# TS-5); the mock and the cases of what must not compile are no tests of their own.
-file(GLOB library_sources CONFIGURE_DEPENDS src/*.cpp)
+# Recursive, as a module has a folder of its own (docs/CodingStyle.md F-12). A test is named as
+# the class it tests and Test, or a family of functions and _test (Testing.md TS-5); the mock
+# and the cases of what must not compile are no tests of their own.
+file(GLOB_RECURSE library_sources CONFIGURE_DEPENDS src/timer_two/*.cpp)
 file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS test/*Test.cpp test/*_test.cpp)
 list(FILTER test_sources EXCLUDE REGEX "/test/(mock|compile_fail)/")
 

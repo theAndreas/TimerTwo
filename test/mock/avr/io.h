@@ -27,6 +27,7 @@ constexpr int CS21{1};
 constexpr int CS22{2};
 constexpr int WGM22{3};
 constexpr int TOIE2{0};
+constexpr int TOV2{0};
 // NOLINTEND(readability-identifier-naming)
 
 // TCNT2, which counts on each read while TCCR2B selects a clock.
@@ -37,12 +38,18 @@ class MockCounter {
   // Sets the counter, as a write to TCNT2 does; it goes on upwards.
   MockCounter& operator=(uint8_t value);
 
-  // Sets the counter and its direction, for a test.
+  // Sets the counter and its direction, for a test; it steps on each read.
   void Set(uint8_t value, bool counting_up);
+
+  // Lets the counter step only on every reads-th read, as a prescaler makes
+  // the CPU read the same value several times.
+  void SetReadsPerStep(uint8_t reads);
 
  private:
   uint8_t value_{0};
   bool counting_up_{true};
+  uint8_t reads_per_step_{1};
+  uint8_t reads_{0};
 };
 
 // avr-libc's names of the registers, globals as they are on the board.
@@ -52,6 +59,9 @@ extern uint8_t volatile TCCR2B;
 extern uint8_t volatile OCR2A;
 extern uint8_t volatile OCR2B;
 extern uint8_t volatile TIMSK2;
+// What was last written to TIFR2: on the board a 1 clears its flag, so a test
+// sees which flags were cleared.
+extern uint8_t volatile TIFR2;
 extern MockCounter TCNT2;
 // NOLINTEND(readability-identifier-naming)
 

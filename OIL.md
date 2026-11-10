@@ -12,7 +12,7 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 |---|------|------------|--------|----|
 | 1 | On the template embedded-cpp-template | – | in progress | #4 |
 | 2 | The known bugs, each shown by a test first | 1 | in progress | #5 |
-| 3 | Version 2.0.0: a namespace, constants for macros, the template's checks | 2 | open | |
+| 3 | Version 2.0.0: a namespace, constants for macros, the template's checks | 2 | in progress | |
 | 4 | Release 2.0.0 and the Library Manager | 3 | open | |
 | 5 | SelfCheck in simavr | 1 | open | |
 
@@ -62,13 +62,26 @@ The tests of the clocks run at 1, 16 and 20 MHz, each a build of its own.
 
 ### 3 Version 2.0.0: a namespace, constants for macros, the template's checks
 
-`timer_two::Timer2` with Google's names, in `src/timer_two/`, without `StandardTypes.h`;
+`timer_two::timer2` with Google's names, in `src/timer_two/`, without `StandardTypes.h`;
 `constexpr` for the macros that are constants. A class a test can construct, so that the tests
-no longer need a process each. What a function returns when it refuses is decided then: an
-`enum class` of TimerTwo's own, `bool`, or Utl's `Status`. XmegaTimer, the same API on the
-ATxmega E5, is the model where it fits. `src/.clang-tidy` goes, and the groups in
+no longer need a process each. `src/.clang-tidy` goes, and the groups in
 `examples/.clang-tidy` with it. A sketch has to change its names: no aliases for the old ones,
 a clean break.
+
+Decided on 2026-11-10:
+
+- A refusal is a `Status` of an `enum class Error`, and `Read()` returns a `Result`, as in
+  MaxMatrix; not `bool`, which says not why, nor Utl's, as every error comes from the library
+  itself and Utl would be a dependency of every user (MaxMatrix OIL 28).
+- The hardware is a parameter of a template, `Timer<Registers>`, as XmegaTimer has it, with one
+  object for Timer/Counter2.
+- The PWM takes no pin: there is only pin 3, as OCR2A is the top.
+- `TimeType` stays, 16 bits from 8 MHz and 32 below.
+
+Found on the way, from the datasheet and the core's `init()`, and fixed with a test: the flag of
+an overflow stays set while the interrupt is disabled, and `init()` runs Timer2 before `setup()`,
+so the interrupt came at once when `Start()` enabled it. It is cleared first now. Not on
+hardware.
 
 ### 4 Release 2.0.0 and the Library Manager
 
