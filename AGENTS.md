@@ -99,3 +99,20 @@ exception goes at the end of a list, with its reason.
 
 <!-- What an agent has to know of this project beyond the template: its design, its terms, what
      not to touch. The template wrote this section once; an update keeps what is added here. -->
+
+TimerTwo drives Timer/Counter2 of the ATmega328P in mode 5, phase correct PWM: OCR2A is the top
+and sets the period with the prescaler, the overflow at the bottom calls the sketch's callback,
+and OC2B on pin 3 gives the PWM. `OIL.md` is the open issue list: what is planned, in which order,
+and why. A pull request that works on an item sets its status and links itself in the same PR.
+
+- **The code is of 2023, until version 2.0.0** (OIL 3): one singleton class `TimerTwo` and
+  `Timer2`, `StdReturnType` from `src/StandardTypes.h`, constants as `#define`. `src/.clang-tidy`
+  and `examples/.clang-tidy` turn off the groups it fails until then; new code, the tests and the
+  mock, keeps every check.
+- **The tests need a process each**: `init()` takes the singleton once, and no test can begin
+  from a new one. ctest runs each test on its own, as `gtest_discover_tests()` adds them; the
+  fixture fails in `SetUp()` otherwise.
+- **The mock of the registers**, `test/mock/avr/io.h`: TCNT2 steps on each read while a clock is
+  selected, up to OCR2A and down again, so that `start()` and `read()`, which wait for the counter
+  to move, end on the host.
+- **Known bugs, for OIL 2**, each to be shown by a failing test before it is fixed; see OIL.md.
