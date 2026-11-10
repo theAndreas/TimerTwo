@@ -1,0 +1,95 @@
+# What a pull request is read with, next to what it is built with in ci.yml: a workflow of its
+# own, as a badge reports a workflow and not a job, so that the README says separately that the
+# builds pass and that the analysers are quiet. Each step is a target of the Makefile.
+#
+#   clang-tidy   the library and the examples with the board's flags, once per variant whose
+#                defines differ, and the tests on the host; which checks, and why the rest are
+#                off, is in .clang-tidy; with the checks of our own, built against LLVM's headers
+#   cppcheck     the library, parsed by cppcheck itself, which reaches what clang does not
+#   headers      every header of src/ compiled on its own, for the host and for the board
+#
+# Every job carries a timeout-minutes well above what it takes, for one that has stopped making
+# progress. This file comes from the template.
+name: static-analysis
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_call:
+
+# Read the repository and nothing else.
+permissions:
+  contents: read
+
+concurrency:
+  # The file's own name in the group: called by release.yml, both this and its sibling run as
+  # the workflow "Release", and one would cancel the other.
+  group: ${{ github.workflow }}-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # CMake and GoogleTest for the database of the tests, jq for the board's.
+      - name: Install the toolchain
+        uses: ./.github/actions/apt-install
+        with:
+          packages: cmake ninja-build libgtest-dev jq
+          # And the project's own, as its dev container has them.
+          file: .devcontainer/apt-packages.txt
+
+      - uses: ./.github/actions/uv-sync
+
+      # The headers the module of the checks of our own is compiled against.
+      - uses: ./.github/actions/llvm-headers
+
+      # The board's flags come from arduino-cli's compilation database.
+      - uses: ./.github/actions/arduino-setup
+
+      - name: Analyse
+        run: make tidy
+
+  cppcheck:
+    name: cppcheck
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install cppcheck
+        uses: ./.github/actions/apt-install
+        with:
+          packages: cppcheck
+
+      - name: Analyse
+        run: make cppcheck
+
+  headers:
+    name: Headers on their own
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the toolchain
+        uses: ./.github/actions/apt-install
+        with:
+          packages: cmake ninja-build libgtest-dev jq
+          # And the project's own, as its dev container has them.
+          file: .devcontainer/apt-packages.txt
+
+      # avr-g++ and the core, which the board's database names.
+      - uses: ./.github/actions/arduino-setup
+
+      - name: Compile each header alone
+        run: make headers

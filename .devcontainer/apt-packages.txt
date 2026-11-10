@@ -1,0 +1,9 @@
+# The project's own Ubuntu packages, beside those the Dockerfile installs for every project: one
+# or more per line, # for a comment. The Dockerfile installs them into the dev container, and a
+# workflow of the project's installs the same with the action apt-install and its input file:
+#
+#   - uses: ./.github/actions/apt-install
+#     with:
+#       file: .devcontainer/apt-packages.txt
+#
+# The template wrote this file once; it is the project's, and `copier update` leaves it alone.

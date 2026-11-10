@@ -1,0 +1,62 @@
+# The reference from the Doxygen blocks, on GitHub Pages. Every pull request builds it and fails
+# on a warning, so that a block Doxygen cannot read, or an entity of the API without one, is
+# found before the merge; only main publishes it. Which warnings count is in tools/docs.sh,
+# what Doxygen reads in the Doxyfile, how a block is written in docs/Documentation.md.
+name: docs
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+# A second push to the same branch makes the first answer worthless. On main, a deployment that
+# runs is left to finish, rather than cut off halfway, and the next one waits for it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Doxygen
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    # Read the repository; the deploy job below asks for what publishing needs.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      # From apt, as in the Dockerfile, so that CI and the container warn alike.
+      - name: Install Doxygen
+        uses: ./.github/actions/apt-install
+        with:
+          packages: doxygen
+
+      - name: Build and check
+        run: make docs
+
+      - name: Hand the pages over
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/docs/html
+
+  deploy:
+    name: GitHub Pages
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

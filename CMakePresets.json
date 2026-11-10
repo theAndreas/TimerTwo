@@ -1,0 +1,150 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "description": "Ninja, a compile database for clangd and clang-tidy, and warnings that do not stop a build here: a warning stops a merge in CI, and nobody in the middle of debugging.",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_COMPILE_WARNING_AS_ERROR": "OFF"
+      }
+    },
+    {
+      "name": "warnings-as-errors",
+      "hidden": true,
+      "description": "What the ci- presets add: every warning of cmake/checks.cmake fails the build.",
+      "cacheVariables": { "CMAKE_COMPILE_WARNING_AS_ERROR": "ON" }
+    },
+    {
+      "name": "default",
+      "displayName": "Tests",
+      "description": "The tests on the host, by GCC, into build/host, where clangd looks. GCC named, so that a directory an editor once configured with another compiler does not quietly stay so: the clang preset is the clang build.",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/host",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "g++" }
+    },
+    {
+      "name": "clang",
+      "displayName": "Tests by clang",
+      "description": "The same tests by clang: two compilers disagree about what deserves a warning.",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/clang",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++" }
+    },
+    {
+      "name": "sanitize",
+      "displayName": "Tests under ASan and UBSan",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build/sanitize",
+      "cacheVariables": { "TIMERTWO_SANITIZE": "ON" }
+    },
+    {
+      "name": "coverage",
+      "displayName": "Tests with coverage",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build/coverage",
+      "cacheVariables": { "TIMERTWO_COVERAGE": "ON" }
+    },
+    {
+      "name": "ci-default",
+      "inherits": ["warnings-as-errors", "default"]
+    },
+    {
+      "name": "ci-clang",
+      "inherits": ["warnings-as-errors", "clang"]
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default" },
+    { "name": "clang", "configurePreset": "clang" },
+    { "name": "sanitize", "configurePreset": "sanitize" },
+    { "name": "coverage", "configurePreset": "coverage" },
+    { "name": "ci-default", "configurePreset": "ci-default" },
+    { "name": "ci-clang", "configurePreset": "ci-clang" }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "clang",
+      "configurePreset": "clang",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "sanitize",
+      "configurePreset": "sanitize",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "ci-default",
+      "configurePreset": "ci-default",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "ci-clang",
+      "configurePreset": "ci-clang",
+      "output": { "outputOnFailure": true }
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "default",
+      "steps": [
+        { "type": "configure", "name": "default" },
+        { "type": "build", "name": "default" },
+        { "type": "test", "name": "default" }
+      ]
+    },
+    {
+      "name": "clang",
+      "steps": [
+        { "type": "configure", "name": "clang" },
+        { "type": "build", "name": "clang" },
+        { "type": "test", "name": "clang" }
+      ]
+    },
+    {
+      "name": "sanitize",
+      "steps": [
+        { "type": "configure", "name": "sanitize" },
+        { "type": "build", "name": "sanitize" },
+        { "type": "test", "name": "sanitize" }
+      ]
+    },
+    {
+      "name": "coverage",
+      "steps": [
+        { "type": "configure", "name": "coverage" },
+        { "type": "build", "name": "coverage" },
+        { "type": "test", "name": "coverage" }
+      ]
+    },
+    {
+      "name": "ci-default",
+      "steps": [
+        { "type": "configure", "name": "ci-default" },
+        { "type": "build", "name": "ci-default" },
+        { "type": "test", "name": "ci-default" }
+      ]
+    },
+    {
+      "name": "ci-clang",
+      "steps": [
+        { "type": "configure", "name": "ci-clang" },
+        { "type": "build", "name": "ci-clang" },
+        { "type": "test", "name": "ci-clang" }
+      ]
+    }
+  ]
+}

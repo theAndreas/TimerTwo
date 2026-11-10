@@ -1,0 +1,46 @@
+# The repository's Python tools for a CI job - clang-format, clang-tidy, cpplint, gcovr,
+# shellcheck, actionlint, ruff - at the versions uv.lock pins.
+#
+# uv itself comes from PyPI at the version the dev container installs, read from the ARG
+# UV_VERSION line of .devcontainer/Dockerfile, so there is one place that says which uv. It goes
+# into a virtual environment of its own, because the runner's Python will not let pip write into
+# the system one.
+# Python is 3.14, the dev container's.
+#
+# uv's download cache is kept between runs, keyed by the lockfile, so a run whose lock has not
+# changed fetches nothing. After this action the environment's bin directory is on PATH, and
+# `uv run --frozen` in the steps after it finds the environment in .venv.
+name: Sync the Python tools
+description: uv at the dev container's version, and uv sync --frozen
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.14'
+
+    - name: Install uv
+      shell: bash
+      run: |
+        version=$(sed -n 's/^ARG UV_VERSION=//p' .devcontainer/Dockerfile)
+        if [ -z "$version" ]; then
+          echo "::error::.devcontainer/Dockerfile names no ARG UV_VERSION"
+          exit 1
+        fi
+        python -m venv "$RUNNER_TEMP/uv"
+        "$RUNNER_TEMP/uv/bin/pip" install --quiet "uv==$version"
+        echo "$RUNNER_TEMP/uv/bin" >> "$GITHUB_PATH"
+
+    - name: Cache uv's downloads
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/uv
+        key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+        restore-keys: uv-${{ runner.os }}-
+
+    - name: Sync
+      shell: bash
+      run: |
+        uv sync --frozen
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"

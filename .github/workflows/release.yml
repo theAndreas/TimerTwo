@@ -1,0 +1,71 @@
+# What turns a tag into a release. Triggered by the tag, as the tag is
+# the decision: pushing v1.2.0 is releasing 1.2.0.
+#
+# The checks are not repeated here: this workflow calls ci.yml and static-analysis.yml and
+# publishes only once every job of both has passed, so a tag whose checks are red produces no
+# release at all. The Arduino Library Manager takes a library from its tags itself; the release
+# page is for a person, with the library as a .zip that the Arduino IDE installs with "Add .ZIP
+# Library", and the notes GitHub writes from the merged pull requests.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+# Only the publishing job writes: creating a release and attaching a file to it. Declared at the
+# top, as a called workflow cannot be granted more than its caller has.
+permissions:
+  contents: write
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
+  analysis:
+    name: Analysis
+    uses: ./.github/workflows/static-analysis.yml
+
+  # library.properties says the version, and the Arduino IDE shows it; a tag v0.2.0 on a commit
+  # whose library.properties still says 0.1.0 would publish a release that names itself otherwise.
+  # Asked here, before anything is published.
+  version:
+    name: The tag matches library.properties
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          library=$(sed -n 's/^version=//p' library.properties)
+          if [ "$tag" != "$library" ]; then
+            echo "::error::The tag says $tag, library.properties says ${library:-nothing}"
+            exit 1
+          fi
+          echo "Version $library"
+
+  publish:
+    name: Publish the release
+    needs: [checks, analysis, version]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # The library as the Arduino IDE installs it, in a folder named after it: what git tracks,
+      # without the dev container, CI and the tools, which a sketch does not need.
+      - name: Pack the library
+        run: |
+          name=$(sed -n 's/^name=//p' library.properties)
+          git archive --format=zip --prefix="${name}/" \
+            --output="${name}-${GITHUB_REF_NAME}.zip" HEAD \
+            -- library.properties LICENSE README.md src examples
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
+            ./*.zip

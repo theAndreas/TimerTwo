@@ -1,0 +1,138 @@
+# What a pull request is built and tested with. Every step that builds or checks something is a
+# target of the Makefile, the same a developer runs; under CI it takes the ci- presets, warnings
+# as errors, as GitHub sets CI=true. What reads the code is static-analysis.yml beside this one,
+# so that each has a badge of its own.
+#
+#   lint           clang-format, cpplint, shellcheck, actionlint, ruff
+#   tests          the tests on the host, by GCC, also under ASan and UBSan, and what they reach
+#                  of src/ into the job's summary
+#   clang          the same tests by clang, which warns about other things than GCC
+#   examples       SelfCheck in simavr, and every example in every variant, without a warning;
+#                  flash and RAM into the job's summary
+#   arduino-lint   the rules of the Arduino Library Manager
+#
+# Every job carries a timeout-minutes well above what it takes, for a job that has stopped
+# making progress; the apt installs go through .github/actions/apt-install, which caches the
+# packages and retries a mirror that has slowed to a trickle. This file comes from the template;
+# a job of the project's own goes into a workflow of its own, so that `copier update` merges
+# nothing into it.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  # So that release.yml runs this file rather than repeat it: a release is then something the
+  # whole of CI has passed.
+  workflow_call:
+
+# Read the repository and nothing else: no job here writes to it, and a token that could would be
+# handed to every action each job runs.
+permissions:
+  contents: read
+
+# A second push to the same branch makes the first answer worthless.
+concurrency:
+  # The file's own name in the group: called by release.yml, both this and its sibling run as
+  # the workflow "Release", and one would cancel the other.
+  group: ${{ github.workflow }}-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      # cpplint derives the header guards from the path below the parent of the checkout, which
+      # GitHub names after the repository.
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/uv-sync
+
+      - name: Lint
+        run: make lint
+
+  tests:
+    name: Host tests
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the toolchain
+        uses: ./.github/actions/apt-install
+        with:
+          packages: cmake ninja-build libgtest-dev
+          # And the project's own, as its dev container has them.
+          file: .devcontainer/apt-packages.txt
+
+      # gcovr, for the coverage.
+      - uses: ./.github/actions/uv-sync
+
+      - name: Tests
+        run: make tests
+
+      - name: Tests under ASan and UBSan
+        run: make sanitize
+
+      - name: Coverage
+        run: make coverage
+
+  clang:
+    name: Host tests by clang
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the toolchain
+        uses: ./.github/actions/apt-install
+        with:
+          packages: cmake ninja-build libgtest-dev clang
+          # And the project's own, as its dev container has them.
+          file: .devcontainer/apt-packages.txt
+
+      - name: Tests
+        run: make clang
+
+  examples:
+    name: Examples
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install simavr
+        uses: ./.github/actions/apt-install
+        with:
+          packages: simavr
+
+      - uses: ./.github/actions/arduino-setup
+
+      - name: SelfCheck in simavr
+        run: make self-check
+
+      - name: Compile
+        run: make examples
+
+      - name: The sizes in the README
+        run: make sizes
+
+  arduino-lint:
+    name: arduino-lint
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # "submit" while the library is not in the Library Manager; once it is, "update" adds the
+      # checks for a new release.
+      - uses: arduino/arduino-lint-action@v3
+        with:
+          project-type: library
+          library-manager: submit

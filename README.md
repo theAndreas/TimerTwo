@@ -63,4 +63,16 @@ void loop() {
 }
 ```
 
-For a more advanced usage see also *Sketch.ino* file.
+This is [examples/Basics](examples/Basics/Basics.ino). For a more advanced usage see also
+[examples/Read](examples/Read/Read.ino).
+
+## Development
+
+TimerTwo is built and checked as the projects made from
+[embedded-cpp-template](https://github.com/theAndreas/embedded-cpp-template) are: `make` lists
+every build and check, `make check` is what CI runs. [OIL.md](https://github.com/theAndreas/TimerTwo/blob/main/OIL.md) is what is planned, and
+[AGENTS.md](https://github.com/theAndreas/TimerTwo/blob/main/AGENTS.md) what a contributor has to know.
+
+## Licence
+
+GPL-3.0-or-later, see [LICENSE](LICENSE).

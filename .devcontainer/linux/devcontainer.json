@@ -1,0 +1,31 @@
+{
+    "name": "TimerTwo (Linux)",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "context": ".."
+    },
+    // Extensions, the Arduino core and the volumes live in ../shared.
+    "features": {
+        "./../shared": {}
+    },
+    // Podman's generated feature build can leave /tmp at 0755 even after chmod
+    // in the Dockerfile. Set its permissions at runtime, before VS Code attaches.
+    "runArgs": ["--tmpfs", "/tmp:rw,mode=1777"],
+    // X11 works on native Linux without requiring the WSL-only /mnt/wslg path.
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}"
+    },
+    // The agent socket lands on a fixed path, because the host one carries a random
+    // name that would change under the container on every host login.
+    "remoteEnv": {
+        "SSH_AUTH_SOCK": "/tmp/ssh-agent"
+    },
+    // A missing SSH_AUTH_SOCK would leave the mount below with an empty "source=",
+    // and container creation then fails on a docker error that never mentions SSH.
+    // Fail here instead, where the message can say what to do about it.
+    "initializeCommand": "bash -c 'test -S \"$SSH_AUTH_SOCK\" || { echo \"TimerTwo devcontainer: no SSH agent on the host (SSH_AUTH_SOCK is unset or not a socket). Start one and add the key, or use the WSL2 variant, which relies on VS Codes own agent forwarding. See .devcontainer/README.md.\" >&2; exit 1; }'",
+    "mounts": [
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+        "source=${localEnv:SSH_AUTH_SOCK},target=/tmp/ssh-agent,type=bind"
+    ]
+}
