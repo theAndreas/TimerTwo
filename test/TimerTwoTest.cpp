@@ -225,7 +225,8 @@ TEST_F(TimerTwoTest, SetPwmDutySetsTheCompareValue) {
 
   EXPECT_EQ(Timer2.setPwmDuty(TimerTwo::PWM_PIN_3, 64), E_OK);
 
-  EXPECT_EQ(OCR2B, 62);
+  // 64 / 255 of the top, 250, rounded.
+  EXPECT_EQ(OCR2B, 63);
 }
 
 TEST_F(TimerTwoTest, SetPwmDutyIsRefusedBeforeInit) {
@@ -331,6 +332,108 @@ TEST_F(TimerTwoTest, ReadScalesByEachPrescaler) {
 
     EXPECT_EQ(microseconds, c.sixteen_steps) << "period " << c.period;
   }
+}
+
+// The bugs of OIL 2, each shown here before it was fixed.
+
+TEST_F(TimerTwoTest, ResumeLetsTheTimerRunAgain) {
+  ASSERT_EQ(Timer2.init(100U), E_OK);
+  ASSERT_EQ(Timer2.start(), E_OK);
+  Timer2.stop();
+
+  ASSERT_EQ(Timer2.resume(), E_OK);
+
+  EXPECT_EQ(Timer2.getState(), TimerTwo::STATE_RUNNING);
+  TimerTwo::TimeType microseconds{0};
+  EXPECT_EQ(Timer2.read(microseconds), E_OK);
+  EXPECT_EQ(Timer2.start(), E_NOT_OK);
+}
+
+TEST_F(TimerTwoTest, StopBeforeInitChangesNothing) {
+  Timer2.stop();
+
+  EXPECT_EQ(Timer2.getState(), TimerTwo::STATE_INIT);
+  EXPECT_EQ(Timer2.start(), E_NOT_OK);
+  EXPECT_EQ(ClockSelect(), 0);
+}
+
+TEST_F(TimerTwoTest, StartAfterDetachInterruptLeavesTheInterruptOff) {
+  ASSERT_EQ(Timer2.init(1000U, CountOverflow), E_OK);
+  ASSERT_EQ(Timer2.start(), E_OK);
+  Timer2.detachInterrupt();
+  Timer2.stop();
+
+  ASSERT_EQ(Timer2.start(), E_OK);
+
+  EXPECT_FALSE(BitIsSet(TIMSK2, TOIE2));
+  EXPECT_EQ(Timer2.getTimerIsrCallbackFunction(), nullptr);
+}
+
+TEST_F(TimerTwoTest, AFullDutyIsTheTop) {
+  ASSERT_EQ(Timer2.init(1000U), E_OK);
+
+  ASSERT_EQ(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 255), E_OK);
+
+  // OCR2B at the top keeps the output high all the time.
+  EXPECT_EQ(OCR2B, OCR2A);
+}
+
+TEST_F(TimerTwoTest, ANoDutyIsZero) {
+  ASSERT_EQ(Timer2.init(1000U), E_OK);
+
+  ASSERT_EQ(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 0), E_OK);
+
+  // OCR2B at the bottom keeps the output low all the time.
+  EXPECT_EQ(OCR2B, 0);
+}
+
+TEST_F(TimerTwoTest, SetPeriodKeepsTheDuty) {
+  ASSERT_EQ(Timer2.init(1000U), E_OK);
+  ASSERT_EQ(Timer2.enablePwm(TimerTwo::PWM_PIN_3, 255), E_OK);
+
+  ASSERT_EQ(Timer2.setPeriod(100U), E_OK);
+
+  EXPECT_EQ(OCR2A, 100);
+  EXPECT_EQ(OCR2B, 100);
+}
+
+// At 100 us the prescaler is 8: 50 steps of 0.5 us.
+TEST_F(TimerTwoTest, ReadKeepsTheStepsBelowSixteen) {
+  ASSERT_EQ(Timer2.init(100U), E_OK);
+  ASSERT_EQ(Timer2.start(), E_OK);
+  TCNT2.Set(50, true);
+  TimerTwo::TimeType microseconds{0};
+
+  EXPECT_EQ(Timer2.read(microseconds), E_OK);
+
+  EXPECT_EQ(microseconds, 25U);
+}
+
+TEST_F(TimerTwoTest, InitRefusesAPeriodOfZeroAndStaysUninitialized) {
+  OCR2A = 0;
+
+  EXPECT_EQ(Timer2.init(0U, CountOverflow), E_NOT_OK);
+
+  EXPECT_EQ(Timer2.getState(), TimerTwo::STATE_INIT);
+  EXPECT_EQ(Timer2.start(), E_NOT_OK);
+}
+
+TEST_F(TimerTwoTest, InitRefusesAPeriodAboveTheLongestAndStaysUninitialized) {
+  EXPECT_EQ(
+      Timer2.init(static_cast<TimerTwo::TimeType>(Timer2.getPeriodMax() + 1U)),
+      E_NOT_OK);
+
+  EXPECT_EQ(Timer2.getState(), TimerTwo::STATE_INIT);
+}
+
+TEST_F(TimerTwoTest, SetPeriodRefusesAPeriodOfZero) {
+  ASSERT_EQ(Timer2.init(1000U), E_OK);
+  ASSERT_EQ(Timer2.start(), E_OK);
+
+  EXPECT_EQ(Timer2.setPeriod(0U), E_NOT_OK);
+
+  EXPECT_EQ(OCR2A, 250);
+  EXPECT_EQ(ClockSelect(), kPrescale32);
 }
 
 }  // namespace
