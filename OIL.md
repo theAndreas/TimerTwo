@@ -10,7 +10,7 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 
 | # | Item | Depends on | Status | PR |
 |---|------|------------|--------|----|
-| 1 | On the template embedded-cpp-template | – | in progress | |
+| 1 | On the template embedded-cpp-template | – | in progress | #4 |
 | 2 | The known bugs, each shown by a test first, and SelfCheck in simavr | 1 | open | |
 | 3 | Version 2.0.0: a namespace, constants for macros, the template's checks | 2 | open | |
 | 4 | Release 2.0.0 and the Library Manager | 3 | open | |
