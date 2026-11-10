@@ -1,64 +1,63 @@
-/******************************************************************************************************************************************************
- *  COPYRIGHT
- *  ---------------------------------------------------------------------------------------------------------------------------------------------------
- *  \verbatim
- *  Copyright (c) Andreas Burnickl                                                                                                 All rights reserved.
+// Copyright 2026 Andreas Burnickl
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+/*!
+ * \file
+ * \brief The return type and the bit macros that TimerTwo shares with the
+ *        author's older libraries.
  *
- *  \endverbatim
- *  ---------------------------------------------------------------------------------------------------------------------------------------------------
- *  FILE DESCRIPTION
- *  -------------------------------------------------------------------------------------------------------------------------------------------------*/
-/**     \file       StandardTypes.h
- *      \brief      Main header file of standard types library
- *
- *      \details    Library with standard types
- *                  
- *
- *****************************************************************************************************************************************************/
-#ifndef _STANDARD_TYPES_H_
+ * The same file comes with those libraries, under the same guard, so that a
+ * sketch that includes two of them gets its definitions once. Version 2.0.0
+ * replaces it by types of the namespace timer_two.
+ */
+
+// The guard the other copies of this file have; renamed, a sketch with one of
+// them would define E_OK twice.
+#ifndef _STANDARD_TYPES_H_  // NOLINT(build/header_guard)
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _STANDARD_TYPES_H_
 
-/******************************************************************************************************************************************************
- * INCLUDES
- *****************************************************************************************************************************************************/
+/*! \brief A switch of the configuration that is on. */
+#define STD_ON 1u
+/*! \brief A switch of the configuration that is off. */
+#define STD_OFF 0u
 
+/*! \brief The character that ends a string. */
+#define STD_NULL_CHARACTER '\0'
 
-/******************************************************************************************************************************************************
- *  GLOBAL CONSTANT MACROS
- *****************************************************************************************************************************************************/
- /* standard type for configuration */
-#define STD_ON                  1u
-#define STD_OFF                 0u
+/*!
+ * \brief Sets bit `Bit` of `Var` to `Value`, 0 or 1.
+ * \param Var the variable or register
+ * \param Bit the number of the bit
+ * \param Value 0 or 1
+ */
+#define writeBit(Var, Bit, Value) (Var = (Var & ~(1 << Bit)) | (Value << Bit))
 
-#define STD_NULL_CHARACTER      '\0'
-
-
-/******************************************************************************************************************************************************
- *  GLOBAL FUNCTION MACROS
- *****************************************************************************************************************************************************/
-#define writeBit(Var, Bit, Value) \
-(Var = (Var & ~(1 << Bit)) | (Value << Bit))
-
-/* read Bit Group */
+/*!
+ * \brief Reads the group of bits `BitGroupMask` of `Var`, shifted down by
+ *        `BitGroupPosition`, and stores it in `Var`.
+ * \param Var the variable or register
+ * \param BitGroupMask the bits of the group, in place
+ * \param BitGroupPosition the number of the group's lowest bit
+ */
 #define readBitGroup(Var, BitGroupMask, BitGroupPosition) \
-(Var = ((Var & ((uint8_t)BitGroupMask)) >> BitGroupPosition))
+  (Var = ((Var & ((uint8_t)BitGroupMask)) >> BitGroupPosition))
 
-/* write Bit Group */
+/*!
+ * \brief Sets the group of bits `BitGroupMask` of `Var` to `Value`.
+ * \param Var the variable or register
+ * \param BitGroupMask the bits of the group, in place
+ * \param BitGroupPosition the number of the group's lowest bit
+ * \param Value the value of the group, not shifted
+ */
 #define writeBitGroup(Var, BitGroupMask, BitGroupPosition, Value) \
-(Var = ((Var & ~((uint8_t)BitGroupMask)) | ((Value << BitGroupPosition) & ((uint8_t)BitGroupMask))))
+  (Var = ((Var & ~((uint8_t)BitGroupMask)) |                      \
+          ((Value << BitGroupPosition) & ((uint8_t)BitGroupMask))))
 
-
-/******************************************************************************************************************************************************
- *  GLOBAL DATA TYPES AND STRUCTURES
- *****************************************************************************************************************************************************/
-  /* standard return type for functions */
+/*! \brief Whether a function did what it was asked. */
 typedef enum {
-    E_OK = 0,
-    E_NOT_OK = 1
+  E_OK = 0,    /*!< It did. */
+  E_NOT_OK = 1 /*!< It did not, and changed nothing or not all. */
 } StdReturnType;
 
-#endif
-
-/******************************************************************************************************************************************************
- *  E N D   O F   F I L E
- *****************************************************************************************************************************************************/
+#endif  // _STANDARD_TYPES_H_  NOLINT(build/header_guard)
