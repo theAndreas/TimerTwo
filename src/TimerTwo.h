@@ -102,9 +102,12 @@ class TimerTwo {
   TimerIsrCallbackF_void TimerIsrOverflowCallback;
   StateType State;
   ClockSelectType ClockSelectBitGroup;
+  // The duty setPwmDuty() was given, which setPeriod() applies to a new top.
+  byte PwmDutyCycle;
 
   byte getPrescaleShiftScale();
-  byte getTimerCycles(TimeType);
+  byte getTimerCycles(TimeType, ClockSelectType&);
+  byte getPwmCompareValue();
 
  public:
   /*! \brief The one TimerTwo, which Timer2 refers to. */
@@ -116,11 +119,14 @@ class TimerTwo {
   TimerIsrCallbackF_void getTimerIsrCallbackFunction() const {
     return TimerIsrOverflowCallback;
   }
-  /*! \brief The longest period setPeriod() takes, in microseconds. */
+  /*!
+   * \brief The longest period setPeriod() takes, in microseconds: the last one
+   *        whose half fits 256 steps of the largest prescaler.
+   */
   TimeType getPeriodMax() {
-    return TimeType{((TIMERTWO_RESOLUTION / (F_CPU / 1000000uL)) *
-                     TIMERTWO_MAX_PRESCALER * 2u) -
-                    1u};
+    return static_cast<TimeType>(
+        (TIMERTWO_RESOLUTION * TIMERTWO_MAX_PRESCALER * 2uL * 1000uL - 1uL) /
+        (F_CPU / 1000uL));
   }
 
   /*!
@@ -129,24 +135,24 @@ class TimerTwo {
    * \param Microseconds the period, up to getPeriodMax()
    * \param sTimerOverflowCallback what the overflow interrupt calls, or nullptr
    *                               for none
-   * \return E_NOT_OK if the timer was initialized already, or the period is too
-   *         long; the timer is initialized with a callback in the latter case.
+   * \return E_NOT_OK if the timer was initialized already, or setPeriod() would
+   *         refuse the period; the timer is left as it was then.
    */
   StdReturnType init(TimeType Microseconds = 1000uL,
                      TimerIsrCallbackF_void sTimerOverflowCallback = nullptr);
   /*!
    * \brief Sets the period of the interrupt and of the PWM.
    *
-   * The duty of the PWM is a share of the period, and is not set again: call
-   * setPwmDuty() after it.
+   * The duty of the PWM is a share of the period, and keeps its share.
    * \param Microseconds the period, up to getPeriodMax()
-   * \return E_NOT_OK if the period is too long.
+   * \return E_NOT_OK if the period is too long, or too short for one step of
+   *         the counter at the CPU's clock: 0, or 1 below 2 MHz.
    */
   StdReturnType setPeriod(TimeType Microseconds);
   /*!
    * \brief Starts the PWM on a pin, with a duty.
    * \param PwmPin the pin
-   * \param DutyCycle the duty, 0 to 255 of 256
+   * \param DutyCycle the duty, 0 for always low to 255 for always high
    * \return E_NOT_OK if the timer is not initialized.
    */
   StdReturnType enablePwm(PwmPinType PwmPin, byte DutyCycle);
@@ -160,7 +166,7 @@ class TimerTwo {
   /*!
    * \brief Sets the duty of the PWM on a pin that enablePwm() started.
    * \param PwmPin the pin
-   * \param DutyCycle the duty, 0 to 255 of 256
+   * \param DutyCycle the duty, 0 for always low to 255 for always high
    * \return E_NOT_OK if the timer is not initialized.
    */
   StdReturnType setPwmDuty(PwmPinType PwmPin, byte DutyCycle);
@@ -169,10 +175,11 @@ class TimerTwo {
    * \return E_NOT_OK if the timer is not initialized, or runs already.
    */
   StdReturnType start();
-  /*! \brief Stops the counter where it is. */
+  /*! \brief Stops the counter where it is, if it runs. */
   void stop();
   /*!
-   * \brief Lets the counter go on from where stop() stopped it.
+   * \brief Lets the counter go on from where stop() stopped it, and the timer
+   *        runs again.
    * \return E_NOT_OK if the timer was not stopped.
    */
   StdReturnType resume();
@@ -183,7 +190,10 @@ class TimerTwo {
    * \return E_NOT_OK for nullptr.
    */
   StdReturnType attachInterrupt(TimerIsrCallbackF_void TimerOverflowCallback);
-  /*! \brief Disables the overflow interrupt. */
+  /*!
+   * \brief Disables the overflow interrupt and forgets its callback, so that
+   *        start() does not enable it again.
+   */
   void detachInterrupt();
   /*!
    * \brief The time since the counter was last at its bottom.

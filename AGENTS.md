@@ -115,4 +115,7 @@ and why. A pull request that works on an item sets its status and links itself i
 - **The mock of the registers**, `test/mock/avr/io.h`: TCNT2 steps on each read while a clock is
   selected, up to OCR2A and down again, so that `start()` and `read()`, which wait for the counter
   to move, end on the host.
-- **Known bugs, for OIL 2**, each to be shown by a failing test before it is fixed; see OIL.md.
+- **The clocks**: `CMakeLists.txt` builds `test/ClockTest.cpp` at 1 and 20 MHz besides the
+  Uno's 16, as the code computes with quotients of `F_CPU`; its expectations are computed from
+  `F_CPU`, so that they hold at any clock.
+- **No self check in simavr yet** (OIL 5): simavr 1.6 does not count Timer2 in mode 5.

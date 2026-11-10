@@ -11,9 +11,10 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 | # | Item | Depends on | Status | PR |
 |---|------|------------|--------|----|
 | 1 | On the template embedded-cpp-template | – | in progress | #4 |
-| 2 | The known bugs, each shown by a test first, and SelfCheck in simavr | 1 | open | |
+| 2 | The known bugs, each shown by a test first | 1 | in progress | #5 |
 | 3 | Version 2.0.0: a namespace, constants for macros, the template's checks | 2 | open | |
 | 4 | Release 2.0.0 and the Library Manager | 3 | open | |
+| 5 | SelfCheck in simavr | 1 | open | |
 
 ### 1 On the template embedded-cpp-template
 
@@ -32,7 +33,7 @@ today; what does not is 2.
 *Done when* `make check` passes, and flash and RAM of the examples on the Uno are those of
 before, or differ by what a commit names.
 
-### 2 The known bugs, each shown by a test first, and SelfCheck in simavr
+### 2 The known bugs, each shown by a test first
 
 Found while bringing TimerTwo in. Each gets a test that fails on the code of 1, then the fix:
 
@@ -48,11 +49,16 @@ Found while bringing TimerTwo in. Each gets a test that fails on the code of 1, 
 - `F_CPU / 2000000uL` is 0 below 2 MHz, so every period gives a top of 0; and
   `F_CPU / 1000000uL` truncates at 20 MHz, where `getPeriodMax()` is 24575 for 26214.
 - A period of 0 sets a top of 0: the counter stands, and `start()` with a callback waits for it
-  forever.
+  forever. `init()` with a period it refuses still leaves the timer initialized.
 
-Then `examples/SelfCheck`, which tools/self_check.sh runs in simavr: the period counted in
-callbacks and the PWM measured on pin 3, if simavr models mode 5 of Timer2 well enough;
-`SIMAVR_MCU` in `tools/project.sh` is empty until then.
+Found while fixing them, and fixed with them; neither can a test on the host show:
+
+- `attachInterrupt()` writes the pointer to the callback while the interrupt may call it, and
+  the AVR writes it a byte at a time.
+- The duty is computed in `int`, which has 16 bits on the AVR: 255 * 255 overflows it.
+
+The tests of the clocks run at 1, 16 and 20 MHz, each a build of its own.
+
 
 ### 3 Version 2.0.0: a namespace, constants for macros, the template's checks
 
@@ -68,3 +74,27 @@ a clean break.
 
 The README of 2.0.0 with the table of flash and RAM between `<!-- sizes -->` markers, the tag,
 `release.yml`, and the request to the Arduino Library Manager.
+
+### 5 SelfCheck in simavr
+
+`examples/SelfCheck`, which tools/self_check.sh runs in simavr: the period counted in callbacks
+and the PWM measured on pin 3. Not possible with simavr as it is, measured on 2026-11-10 with the
+registers alone, without TimerTwo, in simavr 1.6 of the dev container and in 1.8, the latest
+release, built from source:
+
+- Timer2 counts in the modes normal, CTC and fast PWM, but TCNT2 stays at 0 in both phase
+  correct modes, 1 and 5, though 1.8 lists them in its table of Timer2.
+- In mode 5, OC2B never drives pin 3: low in 61 397 samples over 100 ms at a duty of 64.
+- With the overflow interrupt on in mode 5, the sketch no longer gets through a loop of 100 ms;
+  the interrupt seems to fire without end.
+
+So `start()` waits forever in simavr, and there is nothing to measure. The cause in both
+releases: modes 1 and 5 are missing from the table of Timer2's modes, so TOV2 fires without end.
+
+simavr's master after 1.8 fills the table (63aa5b192, 2026-08-09), and the counter moves; but it
+counts one way only, so TOV2 comes twice as often as on the chip, and the duty on OC2B did not
+come out the same in two programs. Reported with a program that shows it in
+[simavr #442](https://github.com/buserror/simavr/issues/442#issuecomment-6779055513).
+
+`SIMAVR_MCU` in `tools/project.sh` stays empty, and this item waits for a simavr release that
+models phase correct PWM as the chip does; the template's image would then need it too.
