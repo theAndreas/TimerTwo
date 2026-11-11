@@ -17,7 +17,7 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 | 5 | SelfCheck in simavr | 1 | dropped | #9 |
 | 6 | Only the AVRs whose Timer2 has OC2B on pin 3 | 3 | dropped | #9 |
 | 7 | A callback attached while stopped is called after Resume() | 3 | done | #8 |
-| 8 | TimerTwo points to AtmegaTimer | 7 | in progress | #9 |
+| 8 | TimerTwo points to AtmegaTimer | 7 | in progress | #9, #11 |
 
 ### 1 On the template embedded-cpp-template
 
@@ -151,8 +151,10 @@ and comes to no bottom before `Resume()`.
 
 AtmegaTimer, public since 2026-11-11, continues TimerTwo 2.0.0 and goes into the Library Manager
 in its stead. The README says so at its top, no longer points to the Library Manager, and names
-the boards TimerTwo is for, the Uno and the Nano, as 6 is dropped; the merge of #9 is tagged
-`v2.0.0`, so that the state AtmegaTimer starts from has a name and a release with its .zip. The
-repository is archived once AtmegaTimer 1.0.0 is out.
+the boards TimerTwo is for, the Uno and the Nano, as 6 is dropped; the merge of #10 is tagged
+`v2.0.0`, so that the state AtmegaTimer starts from has a name and a release with its .zip. #10,
+rather than #9, as it brings the template's v0.5.1, without which the release could not be built
+while GitHub's runners reached no mirror of Canonical; the code is that of #9. The repository is
+archived once AtmegaTimer 1.0.0 is out.
 
 *Done when* the repository is archived.
