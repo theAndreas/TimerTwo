@@ -6,8 +6,9 @@ Arduino Uno and Nano: the Timer2 counterpart of the Arduino library
 
 The timer runs in phase correct PWM: the period, in microseconds, sets the top and the
 prescaler; the overflow at the bottom calls a function of the sketch; and pin 3 gives a PWM
-whose frequency follows the period. This takes Timer2 from `analogWrite()` on pins 3 and 11 and
-from `tone()`.
+of the same period, 1 kHz at 1000 us. Only pin 3: pin 11 is the output of the register that
+holds the top, so it has no duty of its own. This takes Timer2 from `analogWrite()` on pins 3
+and 11 and from `tone()`.
 
 ```cpp
 #include <TimerTwo.h>
@@ -28,13 +29,26 @@ void loop() {}
 This is [examples/Basics](examples/Basics/Basics.ino). [examples/Read](examples/Read/Read.ino)
 checks each call and reads the time.
 
+## Installation
+
+In the Arduino IDE, the Library Manager finds TimerTwo by its name; with arduino-cli, it is
+`arduino-cli lib install TimerTwo`. Each release on GitHub also carries the library as a .zip,
+for *Sketch > Include Library > Add .ZIP Library*.
+
 ## API
 
 Everything lies in the namespace `timer_two`; `timer2` is the timer. A call that can refuse
 returns a `Status`, and changes nothing when it refuses: `IsOk()` says whether it did what it
 was asked, `GetError()` why not, and `GetErrorText()` the same in a few words for
 `Serial.print()`. A `Status` must not be dropped: where a sketch does not care, `Discard()` says
-so. `Read()` returns a `Result`, the time or why there is none.
+so. `Read()` returns a `Result`, the time or why there is none:
+
+```cpp
+timer_two::Result<timer_two::TimeType> const elapsed{timer_two::timer2.Read()};
+if (elapsed.IsOk()) {
+  Serial.println(elapsed.GetValue());  // microseconds
+}
+```
 
 | Call | What it does | Refuses with |
 |---|---|---|
@@ -55,10 +69,27 @@ The callback runs in the interrupt: it should do little, as setting a flag that 
 and what it shares with `loop()` is `volatile`. Below 8 MHz the times are `uint32_t`, as the
 longest period does not fit 16 bits; from 8 MHz they are `uint16_t`. Both are `TimeType`.
 
+A period is met to a step of the counter, and never exceeded: one that is no whole number of
+steps comes out short by less than a step. A step is up and down once, two cycles of the
+prescaled clock; at 16 MHz an eighth of a microsecond below 32 us, 4 us at 1000 us, and 128 us
+from 8192 us on.
+
+## Flash and RAM
+
+What the examples take on the Uno, as the last build measured it:
+
+<!-- sizes -->
+| Example | Flash, default | RAM, default |
+|---|---|---|
+| Basics | 1298 | 20 |
+| Read | 3168 | 199 |
+<!-- /sizes -->
+
 ## From version 1
 
-Version 2.0.0 breaks every name, on purpose: a sketch of version 1 does not compile until it is
-changed, rather than behaving otherwise without notice. There are no aliases for the old names.
+Version 1 is the code before 2.0.0, which had no version number of its own. Version 2.0.0
+breaks every name, on purpose: a sketch of version 1 does not compile until it is changed,
+rather than behaving otherwise without notice. There are no aliases for the old names.
 
 | Version 1 | Version 2.0.0 |
 |---|---|
@@ -91,8 +122,10 @@ What also changed:
 
 TimerTwo is built and checked as the projects made from
 [embedded-cpp-template](https://github.com/theAndreas/embedded-cpp-template) are: `make` lists
-every build and check, `make check` is what CI runs. [OIL.md](https://github.com/theAndreas/TimerTwo/blob/main/OIL.md) is what is planned, and
-[AGENTS.md](https://github.com/theAndreas/TimerTwo/blob/main/AGENTS.md) what a contributor has to know.
+every build and check, `make check` is what CI runs.
+[OIL.md](https://github.com/theAndreas/TimerTwo/blob/main/OIL.md) is what is planned, and
+[AGENTS.md](https://github.com/theAndreas/TimerTwo/blob/main/AGENTS.md) what a contributor has
+to know.
 
 ## Licence
 
