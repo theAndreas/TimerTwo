@@ -1,5 +1,11 @@
 # TimerTwo
 
+> **TimerTwo is continued as [AtmegaTimer](https://github.com/theAndreas/AtmegaTimer)**, which
+> brings Timer1 as well, and Timer3 to Timer5 of the ATmega2560, each with a PWM on every channel
+> it leaves free and a duty of 0 to 1023. TimerTwo 2.0.0 stays as it is: it gets no new features
+> and does not go into the Library Manager, and this repository is archived once AtmegaTimer
+> 1.0.0 is out. Please open issues and pull requests there.
+
 A periodic interrupt, a PWM and a time readout on Timer/Counter2 of the ATmega328P, as on the
 Arduino Uno and Nano: the Timer2 counterpart of the Arduino library
 [TimerOne](https://playground.arduino.cc/Code/Timer1/).
@@ -31,9 +37,12 @@ checks each call and reads the time.
 
 ## Installation
 
-In the Arduino IDE, the Library Manager finds TimerTwo by its name; with arduino-cli, it is
-`arduino-cli lib install TimerTwo`. Each release on GitHub also carries the library as a .zip,
+TimerTwo is not in the Library Manager. Each release on GitHub carries the library as a .zip,
 for *Sketch > Include Library > Add .ZIP Library*.
+
+It is for the ATmega328P of the Uno and the Nano. On the ATmega2560 of the Mega the PWM comes out
+on pin 9, while TimerTwo makes pin 3 an output, and the ATmega32U4 of the Leonardo has no Timer2;
+AtmegaTimer runs on both the Uno and the Mega.
 
 ## API
 
@@ -123,7 +132,9 @@ What also changed:
 TimerTwo is built and checked as the projects made from
 [embedded-cpp-template](https://github.com/theAndreas/embedded-cpp-template) are: `make` lists
 every build and check, `make check` is what CI runs.
-[OIL.md](https://github.com/theAndreas/TimerTwo/blob/main/OIL.md) is what is planned, and
+[OIL.md](https://github.com/theAndreas/TimerTwo/blob/main/OIL.md) is what was planned here, and
+the [roadmap of AtmegaTimer](https://github.com/theAndreas/AtmegaTimer/blob/main/ROADMAP.md) what
+comes next;
 [AGENTS.md](https://github.com/theAndreas/TimerTwo/blob/main/AGENTS.md) what a contributor has
 to know.
 

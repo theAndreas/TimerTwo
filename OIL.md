@@ -13,10 +13,11 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 | 1 | On the template embedded-cpp-template | – | done | #4 |
 | 2 | The known bugs, each shown by a test first | 1 | done | #5 |
 | 3 | Version 2.0.0: a namespace, constants for macros, the template's checks | 2 | done | #6 |
-| 4 | Release 2.0.0 and the Library Manager | 3 | in progress | #7 |
-| 5 | SelfCheck in simavr | 1 | open | |
-| 6 | Only the AVRs whose Timer2 has OC2B on pin 3 | 3 | open | |
-| 7 | A callback attached while stopped is called after Resume() | 3 | in progress | #8 |
+| 4 | Release 2.0.0 and the Library Manager | 3 | dropped | #7, #9 |
+| 5 | SelfCheck in simavr | 1 | dropped | #9 |
+| 6 | Only the AVRs whose Timer2 has OC2B on pin 3 | 3 | dropped | #9 |
+| 7 | A callback attached while stopped is called after Resume() | 3 | done | #8 |
+| 8 | TimerTwo points to AtmegaTimer | 7 | in progress | #9 |
 
 ### 1 On the template embedded-cpp-template
 
@@ -90,6 +91,11 @@ hardware.
 The README of 2.0.0 with the table of flash and RAM between `<!-- sizes -->` markers, the tag,
 `release.yml`, and the request to the Arduino Library Manager.
 
+*Dropped* on 2026-11-11: TimerTwo is continued as
+[AtmegaTimer](https://github.com/theAndreas/AtmegaTimer), which goes into the Library Manager
+instead (its roadmap, A-8 and A-9); two libraries for Timer2 there would leave a user to guess
+which. The version and the README of #7 stay, and the tag `v2.0.0` marks the last state, see 8.
+
 ### 5 SelfCheck in simavr
 
 `examples/SelfCheck`, which tools/self_check.sh runs in simavr: the period counted in callbacks
@@ -114,6 +120,8 @@ come out the same in two programs. Reported with a program that shows it in
 `SIMAVR_MCU` in `tools/project.sh` stays empty, and this item waits for a simavr release that
 models phase correct PWM as the chip does; the template's image would then need it too.
 
+*Dropped* on 2026-11-11: AtmegaTimer takes it, with these measurements, as A-7 of its roadmap.
+
 ### 6 Only the AVRs whose Timer2 has OC2B on pin 3
 
 `library.properties` names every AVR with `architectures=avr`, and nothing in `src/` asks which
@@ -128,6 +136,9 @@ on 2026-11-11 while going through the README for 4:
 Either the library refuses those chips with an `#error` that says why, or it hands each its pin;
 which is to be decided. The README then names the boards it runs on.
 
+*Dropped* on 2026-11-11: AtmegaTimer hands each chip its pins, the ATmega2560 among them, as A-4
+of its roadmap. The README of TimerTwo names the Uno and the Nano as its boards, see 8.
+
 ### 7 A callback attached while stopped is called after Resume()
 
 `AttachInterrupt()` enabled the overflow interrupt only while the timer ran, and `Resume()` does
@@ -135,3 +146,13 @@ not touch it: a callback attached while the timer was stopped was never called. 
 2026-11-11 in AtmegaTimer, which took the code of 3 (its roadmap, A-10), and shown here by a
 test first. The interrupt is enabled while the timer is stopped as well, where the counter stands
 and comes to no bottom before `Resume()`.
+
+### 8 TimerTwo points to AtmegaTimer
+
+AtmegaTimer, public since 2026-11-11, continues TimerTwo 2.0.0 and goes into the Library Manager
+in its stead. The README says so at its top, no longer points to the Library Manager, and names
+the boards TimerTwo is for, the Uno and the Nano, as 6 is dropped; the merge of #9 is tagged
+`v2.0.0`, so that the state AtmegaTimer starts from has a name and a release with its .zip. The
+repository is archived once AtmegaTimer 1.0.0 is out.
+
+*Done when* the repository is archived.
