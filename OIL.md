@@ -16,6 +16,7 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 | 4 | Release 2.0.0 and the Library Manager | 3 | in progress | #7 |
 | 5 | SelfCheck in simavr | 1 | open | |
 | 6 | Only the AVRs whose Timer2 has OC2B on pin 3 | 3 | open | |
+| 7 | A callback attached while stopped is called after Resume() | 3 | in progress | #8 |
 
 ### 1 On the template embedded-cpp-template
 
@@ -126,3 +127,11 @@ on 2026-11-11 while going through the README for 4:
 
 Either the library refuses those chips with an `#error` that says why, or it hands each its pin;
 which is to be decided. The README then names the boards it runs on.
+
+### 7 A callback attached while stopped is called after Resume()
+
+`AttachInterrupt()` enabled the overflow interrupt only while the timer ran, and `Resume()` does
+not touch it: a callback attached while the timer was stopped was never called. Found on
+2026-11-11 in AtmegaTimer, which took the code of 3 (its roadmap, A-10), and shown here by a
+test first. The interrupt is enabled while the timer is stopped as well, where the counter stands
+and comes to no bottom before `Resume()`.
