@@ -377,6 +377,18 @@ TEST_F(TimerTest, AttachInterruptBeforeStartLeavesTheInterruptOff) {
   EXPECT_EQ(timer().GetCallback(), &CountOverflow);
 }
 
+// OIL 7: the interrupt stayed off, and the callback was never called.
+TEST_F(TimerTest, AttachInterruptWhileStoppedCallsTheCallbackAfterResume) {
+  ASSERT_EQ(timer().Begin(1000U), Error::kOk);
+  ASSERT_EQ(timer().Start(), Error::kOk);
+  ASSERT_EQ(timer().Stop(), Error::kOk);
+
+  ASSERT_EQ(timer().AttachInterrupt(CountOverflow), Error::kOk);
+  ASSERT_EQ(timer().Resume(), Error::kOk);
+
+  EXPECT_TRUE(BitIsSet(TIMSK2, TOIE2));
+}
+
 TEST_F(TimerTest, DetachInterruptDisablesTheInterruptAndForgetsTheCallback) {
   ASSERT_EQ(timer().Begin(1000U, CountOverflow), Error::kOk);
   ASSERT_EQ(timer().Start(), Error::kOk);

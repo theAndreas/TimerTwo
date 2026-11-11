@@ -255,7 +255,8 @@ class Timer {
 
   /*!
    * \brief Sets the function the overflow interrupt calls, and enables the
-   *        interrupt if the timer runs.
+   *        interrupt if the timer runs or is stopped, so that Resume() goes on
+   *        with it.
    * \param callback the function
    * \return Error::kNoCallback for nullptr
    */
@@ -267,7 +268,10 @@ class Timer {
     // through half of the new one.
     ClearBit(Registers::Timsk(), TOIE2);
     callback_ = callback;
-    if (state_ == State::kRunning) {
+    // Stopped, the counter stands and comes to no bottom before Resume().
+    bool const has_counted{(state_ == State::kRunning) ||
+                           (state_ == State::kStopped)};
+    if (has_counted) {
       EnableOverflowInterrupt();
     }
     return Error::kOk;
