@@ -15,6 +15,7 @@ Status: `open`, `in progress`, `done`, `dropped` (with the reason in the item).
 | 3 | Version 2.0.0: a namespace, constants for macros, the template's checks | 2 | done | #6 |
 | 4 | Release 2.0.0 and the Library Manager | 3 | open | |
 | 5 | SelfCheck in simavr | 1 | open | |
+| 6 | Only the AVRs whose Timer2 has OC2B on pin 3 | 3 | open | |
 
 ### 1 On the template embedded-cpp-template
 
@@ -111,3 +112,17 @@ come out the same in two programs. Reported with a program that shows it in
 
 `SIMAVR_MCU` in `tools/project.sh` stays empty, and this item waits for a simavr release that
 models phase correct PWM as the chip does; the template's image would then need it too.
+
+### 6 Only the AVRs whose Timer2 has OC2B on pin 3
+
+`library.properties` names every AVR with `architectures=avr`, and nothing in `src/` asks which
+one it is compiled for; `Timer2Registers::kPwmPin` is 3, where the ATmega328P has OC2B. Found
+on 2026-11-11 while going through the README for 4:
+
+- The ATmega2560 of the Mega has OC2B on pin 9: the PWM comes out there, while `EnablePwm()`
+  makes pin 3 an output.
+- The ATmega32U4 of the Leonardo has no Timer/Counter2: a sketch fails to compile on a register
+  it does not name, rather than on why.
+
+Either the library refuses those chips with an `#error` that says why, or it hands each its pin;
+which is to be decided. The README then names the boards it runs on.
