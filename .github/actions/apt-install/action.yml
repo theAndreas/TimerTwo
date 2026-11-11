@@ -17,7 +17,13 @@
 #   the first version of this retried on a new connection, and all four attempts met the same
 #   crawl on the same file - the runner's apt-mirrors.txt lists Azure's mirror first and
 #   archive.ubuntu.com second, but apt moves down that list on an error, never on slowness.
-#   So from the second attempt on, Azure's line is taken out of the list.
+#   So from the second attempt on, Azure's line is taken out of the list. apt-get update before
+#   it does the same, as a mirror that does not answer at all keeps apt waiting as long, and
+#   its third attempt goes to mirrors.edge.kernel.org: on 2026-11-11 the runners reached no
+#   server of Canonical for hours, neither Azure's mirror nor archive.ubuntu.com, while
+#   kernel.org's answered at once. It is one of Ubuntu's listed mirrors, and apt checks the
+#   archive's signature with the runner's keyring, whichever mirror serves it. Every source of
+#   Ubuntu on the runner goes through apt-mirrors.txt, the security updates as well.
 # - Only then is it installed, from the cache and with no timeout: the downloading is over by
 #   then, and a timeout that killed dpkg halfway through unpacking would leave the runner
 #   broken rather than slow.
@@ -57,7 +63,8 @@ runs:
         echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
 
     # The index is normally fast even when the archive is not, and the key below needs it. It
-    # gets the same timeout and retry all the same: ci.yml records an apt-get update that hung.
+    # gets the same timeout and retry all the same, off Azure's mirror from the second attempt
+    # and off Canonical's from the third: ci.yml records an apt-get update that hung.
     # --print-uris lists every .deb the install would fetch. Only the file name goes into the
     # key: it carries the version, so the key changes exactly when a download would, while the
     # URL in front of it names whichever mirror this runner was given.
@@ -66,6 +73,14 @@ runs:
       shell: bash
       run: |
         for Attempt in 1 2 3; do
+          if [ "$Attempt" -eq 2 ] && grep -q 'azure\.archive\.ubuntu\.com' /etc/apt/apt-mirrors.txt 2>/dev/null; then
+            echo "::warning::moving off azure.archive.ubuntu.com to the next mirror in /etc/apt/apt-mirrors.txt"
+            sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+          fi
+          if [ "$Attempt" -eq 3 ] && grep -q 'archive\.ubuntu\.com' /etc/apt/apt-mirrors.txt 2>/dev/null; then
+            echo "::warning::moving off archive.ubuntu.com to mirrors.edge.kernel.org"
+            sudo sed -i 's#[a-z]*://archive\.ubuntu\.com/ubuntu#https://mirrors.edge.kernel.org/ubuntu#' /etc/apt/apt-mirrors.txt
+          fi
           if sudo timeout 120 apt-get update -q; then break; fi
           if [ "$Attempt" -eq 3 ]; then
             echo "::error::apt-get update did not finish in three attempts"
@@ -88,6 +103,7 @@ runs:
     # _apt sandbox user there. That is a warning, the download is the same; the chown
     # afterwards is what lets the cache step read the files back to save them.
     # timeout runs under sudo rather than around it, so that its signal reaches apt itself.
+    # apt-get update may have moved off Azure's mirror already; then the grep finds nothing.
     - name: Download, retrying a stalled mirror
       shell: bash
       run: |
